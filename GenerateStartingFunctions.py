@@ -37,5 +37,5 @@ def psi_s2(rvec):
 
 
 # Retrieve the functions
-def getFunctions():
+def getH2Functions():
   return (psi_s1, psi_s2)
