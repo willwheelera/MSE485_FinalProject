@@ -16,14 +16,18 @@ k_e = 1.0 # Coulomb's constant (1/4\pi\epsilon_0)
 
 
 # Define atom positions
+R = numpy.zeros((2,3))
 R1 = np.array([-0.5,0,0])*a_B
 R2 = np.array([0.5,0,0])*a_B
+R[0,:] = R1
+R[1,:] = R2
 
 # Spherical Harmonics
 def Y00(rvec):
   return  (4.0*math.pi)**(-0.5)
 
 # Radial functions
+# Note: this function requires that position coordinates are along dimension 1 of the array (not 0)
 def R10(rvec):
   r = np.sqrt(np.sum(rvec*rvec,1))
   return 2*a_B**(-1.5)*np.exp(-r/a_B)
@@ -39,3 +43,6 @@ def psi_s2(rvec):
 # Retrieve the functions
 def getH2Functions():
   return (psi_s1, psi_s2)
+
+def getIonPositions():
+  return R
