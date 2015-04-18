@@ -42,7 +42,7 @@ def psi_s2(rvec):
 
 # Retrieve the functions
 def getH2Functions():
-  return (psi_s1, psi_s2)
+  return np.array([psi_s1, psi_s2])
 
 def getIonPositions():
   return R
