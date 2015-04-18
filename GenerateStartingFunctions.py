@@ -16,11 +16,11 @@ k_e = 1.0 # Coulomb's constant (1/4\pi\epsilon_0)
 
 
 # Define atom positions
-R = numpy.zeros((2,3))
+ion_positions = np.zeros((2,3))
 R1 = np.array([-0.5,0,0])*a_B
 R2 = np.array([0.5,0,0])*a_B
-R[0,:] = R1
-R[1,:] = R2
+ion_positions[0,:] = R1
+ion_positions[1,:] = R2
 
 # Spherical Harmonics
 def Y00(rvec):
@@ -45,4 +45,9 @@ def getH2Functions():
   return np.array([psi_s1, psi_s2])
 
 def getIonPositions():
-  return R
+  return ion_positions
+
+def InitializeElectrons():
+    e_positions = ion_positions + np.random.randn(2,3) * a_B # generate array of electron positions
+    return e_positions
+
