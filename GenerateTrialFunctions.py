@@ -4,6 +4,8 @@ import GenerateStartingFunctions
 from GenerateStartingFunctions import *
 from numpy import random
 from numpy import sqrt, sin, cos, exp
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 
 # GenerateTrialFunctions.py
@@ -40,8 +42,9 @@ def UpdatePosition(R,i,simga): #move the electron at the i'th position
 
 # STARTING MAIN LOOP FOR VQMC
 sigma = 0.5
-steps = 2000
+steps = 30000
 moves_accepted = 0.0
+collection_of_positions = np.array([0,0,0])
 for t in range(0,steps):
     for i in range(0,len(e_positions)):
         e_positions_old = e_positions.copy() #generate array of old electron positions
@@ -56,7 +59,34 @@ for t in range(0,steps):
             moves_accepted += 1.0
         else:
             e_positions = e_positions_old
+        collection_of_positions = np.vstack((collection_of_positions,e_positions))
+
 print((moves_accepted/(2.0*t))*100.0)
+
+x = collection_of_positions[:,0]
+y = collection_of_positions[:,1]
+z = collection_of_positions[:,2]
+
+
+#fig = plt.figure()
+#ax = fig.add_subplot(111, projection='3d')
+#ax.scatter(x, y, z, marker=".")#, zs)
+#ax.set_xlabel('X Label')
+#ax.set_ylabel('Y Label')
+#ax.set_zlabel('Z Label')
+#plt.show()
+
+nbins = 300
+H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
+Hmasked = np.ma.masked_where(H==0,H)
+fig2 = plt.figure()
+plt.pcolormesh(xedges,yedges,Hmasked)
+plt.xlabel('x')
+plt.ylabel('y')
+cbar = plt.colorbar()
+cbar.ax.set_ylabel('Counts of Psi')
+plt.show()
+
 
 
 
