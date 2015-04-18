@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 import math
-
+import matplotlib.pyplot as plt
 
 def MC_loop(Psi, N):
   # Psi is the trial wavefunction. This function finds the energy of Psi using Monte Carlo
