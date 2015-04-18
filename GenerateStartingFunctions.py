@@ -25,7 +25,7 @@ def Y00(rvec):
 
 # Radial functions
 def R10(rvec):
-  r = np.sqrt(np.sum(rvec*rvec))
+  r = np.sqrt(np.sum(rvec*rvec,1))
   return 2*a_B**(-1.5)*np.exp(-r/a_B)
 
 # S orbitals
