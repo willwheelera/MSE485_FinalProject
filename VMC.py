@@ -37,7 +37,12 @@ def MC_loop():
     
     e_positions = GSF.InitializeElectrons()
     e_positions_new = e_positions.copy()
-    collection_of_positions = numpy.zeros((2*N,3))
+    N = len(e_positions)
+    collection_of_positions = np.zeros((2*N*steps,3))
+    
+    prob_old = GTF.PsiManyBody(e_positions)**2
+    
+    E = np.zeros(steps)
     
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
@@ -47,34 +52,37 @@ def MC_loop():
             e_positions_new = UpdatePosition(e_positions,i,sigma) #generate array of new electron poisitons
             
             # I don't think we need this: -Will
-            # prob_old = GTF.PsiManyBody(e_positions_old,psi_array)**2 #get modulus^2 of old wave function
+            # prob_old = GTF.PsiManyBody(e_positions_old)**2 #get modulus^2 of old wave function
             
-            prob_new = GTF.PsiManyBody(e_positions_new,psi_array)**2 #get modulus^2 of new wave function
+            prob_new = GTF.PsiManyBody(e_positions_new)**2 #get modulus^2 of new wave function
             ratio = prob_new/prob_old #take the ratio of the squares
 
             ## A = min(1,ratio) # Acceptance crtierion - this is automatically satisfied in our probability checking
-            
+            A = ratio
+
             ran = np.random.random()
             if A > ran:
                 e_positions = e_positions_new
                 moves_accepted += 1.0
                 prob_old = prob_new
-            else:
+            #else:
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old
-            collection_of_positions[t:t+1,:] = e_positions
+            collection_of_positions[2*t:2*t+2,:] = e_positions
+        E[t] = GTF.KineticTerm(e_positions) # TODO this is only kinetic
+
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
     
-    return collection_of_positions
+    return collection_of_positions, E
 
 
 #############################################################
-# Run Simulation
+# RUN SIMULATIONS
 #############################################################
 
 if __name__ == '__main__':
     
-    collection_of_positions = MC_loop()
+    collection_of_positions, E = MC_loop()
 
 #############################################################
 # PLOT POSITIONS
@@ -84,7 +92,7 @@ if __name__ == '__main__':
     y = collection_of_positions[:,1]
     z = collection_of_positions[:,2]
     
-    
+    # 3D SCATTER PLOT
     #fig = plt.figure()
     #ax = fig.add_subplot(111, projection='3d')
     #ax.scatter(x, y, z, marker=".")#, zs)
@@ -93,15 +101,24 @@ if __name__ == '__main__':
     #ax.set_zlabel('Z Label')
     #plt.show()
     
+    # 2D HISTOGRAM
     nbins = 300
     H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
     Hmasked = np.ma.masked_where(H==0,H)
-    fig2 = plt.figure()
+    #fig2 = plt.figure()
+    plt.subplot(2,1,1)
     plt.pcolormesh(xedges,yedges,Hmasked)
     plt.xlabel('x')
     plt.ylabel('y')
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts of Psi')
+    
+    # ENERGY TRACE
+    plt.subplot(2,1,2)
+    plt.plot(E)
+    plt.xlabel('Monte Carlo steps')
+    plt.ylabel('Energy')
+
     plt.show()
     
 

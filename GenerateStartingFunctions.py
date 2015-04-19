@@ -55,6 +55,7 @@ def getH2Functions():
   return np.array([psi_s1, psi_s2])
 
 # Retrieve the Laplacians of the wavefunctions (can be defined analytically)
+def getH2Laplacians():
   return np.array([Lpsi_s1, Lpsi_s2])
 
 def getIonPositions():

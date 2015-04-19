@@ -25,12 +25,13 @@ def SlaterMatrix(e_positions,psi_array):
     return slater_matrix
 
 def SlaterDeterminant(slater_matrix):
-    WF = (1/sqrt(np.math.factorial(len(e_positions)))) * LA.det(slater_matrix)
+    Nfact = np.math.factorial(len(slater_matrix))
+    WF = (1/np.sqrt(Nfact)) * LA.det(slater_matrix)
     return WF
 
 def PsiManyBody(e_positions):
-    slater_matrix = SlaterMatrix(e_positions)
-    return Slater_Determinant(slater_matrix)
+    slater_matrix = SlaterMatrix(e_positions,psi_array)
+    return SlaterDeterminant(slater_matrix)
 
 ##########################################
 # TODO don't need this function
@@ -58,8 +59,14 @@ def KineticTerm(e_positions):
     
     deriv_mat = SlaterMatrix(e_positions,psi_laplacian) # the slater matrix of the laplacians
     N = len(e_positions) # 
-    allSlaterMats = numpy.repeat(SlaterMatrix(e_positions,psi_array),N,axis=2) # copy this matrix N times along dimension 2
+
+    allSlaterMats = np.repeat([SlaterMatrix(e_positions,psi_array)],N,axis=0) # copy this matrix N times along dimension 0
+    
     for i in range(N):
-        allSlaterMats[i,:,i] = deriv_mat[i,:] # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
-    localKineticEnergy = numpy.sum(LA.det(allSlaterMats)) # add together the determinants of each derivative matrix
+        allSlaterMats[i,i,:] = deriv_mat[i,:] # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
+        # First index: slice
+        # Second index: matrix row (which position)
+        # Third index: matrix column (which wavefunction)
+    
+    localKineticEnergy = np.sum(LA.det(allSlaterMats)) # add together the determinants of each derivative matrix
     return localKineticEnergy
