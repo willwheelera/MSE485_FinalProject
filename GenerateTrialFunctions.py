@@ -84,19 +84,20 @@ def KineticTerm(e_positions):
 def PotentialTerm(e_positions):
     R = GSF.ion_positions
     Z = GSF.ion_charges
-    
+    q_e2 = GSF.q_e**2
+
     for i in range(len(e_positions)):
         # electron-ion terms
-        S = numpy.repeat([e_positions[i]],len(R),axis=0)
+        S = np.repeat([e_positions[i,:]],len(R),axis=0)
         ion_displacements = S-R
-        ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements))
-        V_ion = np.sum(Z/ion_distances)*q_e*q_e
+        ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
+        V_ion = np.sum(Z/ion_distances) * q_e2
          
         # electron-electron terms
-        S = numpy.repeat([e_positions[i]],len(e_positions-i+1),axis=0)
-        e_displacements = S-e_positions[i+1:] # only calculate distances to e- not already counted
-        e_distances = np.sqrt(np.sum(e_displacements*e_displacements))
-        V_e = np.sum(1.0/e_distances) * q_e*q_e
+        S = np.repeat([e_positions[i,:]],len(e_positions)-i-1,axis=0)
+        e_displacements = S-e_positions[i+1:,:] # only calculate distances to e- not already counted
+        e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
+        V_e = np.sum(1.0/e_distances) * q_e2
 
     return V_ion + V_e
 

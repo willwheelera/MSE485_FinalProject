@@ -3,6 +3,7 @@ import numpy.linalg as LA
 import matplotlib.pyplot as plt
 import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
+import timing
 
 def MC_loop(Psi, N):
   # Psi is the trial wavefunction. This function finds the energy of Psi using Monte Carlo
@@ -32,7 +33,7 @@ moves_accepted = 0.0
 def MC_loop():
     
     sigma = 0.5
-    steps = 2000
+    steps = 10000
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -44,7 +45,8 @@ def MC_loop():
     prob_old = Psi**2
     
     E = np.zeros(steps)
-    
+    index = 0
+
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
             # TODO I don't think we need this line: - Will
@@ -71,9 +73,12 @@ def MC_loop():
             #else:
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old
-            collection_of_positions[2*t:2*t+2,:] = e_positions
+            collection_of_positions[index:index+2,:] = e_positions
+            index += 2
         
-        E[t] = GTF.KineticTerm(e_positions)/Psi + GTF.PotentialTerm(e_positions) 
+        E[t] = GTF.KineticTerm(e_positions)/Psi + GTF.PotentialTerm(e_positions)
+        printtime = 500
+        if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
     
@@ -106,7 +111,7 @@ if __name__ == '__main__':
     #plt.show()
     
     # 2D HISTOGRAM
-    nbins = 300
+    nbins = 200
     H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
     Hmasked = np.ma.masked_where(H==0,H)
     #fig2 = plt.figure()
