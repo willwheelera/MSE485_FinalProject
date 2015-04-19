@@ -39,6 +39,7 @@ def MC_loop(Psi, N):
     
     e_positions = GSF.InitializeElectrons()
     e_positions_new = e_positions.copy()
+    collection_of_positions = numpy.zeros((2*N,3))
     
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
@@ -63,8 +64,8 @@ def MC_loop(Psi, N):
             else:
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old
-    print((moves_accepted/(2.0*t))*100.0)
-
+            collection_of_positions[t:t+1,:] = e_positions
+    print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
 
 
 #############################################################
