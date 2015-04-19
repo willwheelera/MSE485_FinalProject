@@ -72,7 +72,8 @@ def MC_loop():
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old
             collection_of_positions[2*t:2*t+2,:] = e_positions
-        E[t] = GTF.KineticTerm(e_positions)/Psi # TODO this is only kinetic
+        
+        E[t] = GTF.KineticTerm(e_positions)/Psi + GTF.PotentialTerm(e_positions) 
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
     

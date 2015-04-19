@@ -2,8 +2,9 @@ import numpy as np
 import numpy.linalg as LA
 import GenerateStartingFunctions as GSF
 from numpy import random
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
+
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
 
 
 # GenerateTrialFunctions.py
@@ -50,6 +51,7 @@ def LaplacianPsi(e_positions,i):
     return SlaterDeterminant(slater_mat)
 
 ###########################################
+# TODO move these functions to another file
 
 def KineticTerm(e_positions):
     # We can compute all of the kinetic energy terms given the positions
@@ -78,3 +80,28 @@ def KineticTerm(e_positions):
         localKineticEnergy = np.sum(dets)
 
     return localKineticEnergy
+
+def PotentialTerm(e_positions):
+    R = GSF.ion_positions
+    Z = GSF.ion_charges
+    
+    for i in range(len(e_positions)):
+        # electron-ion terms
+        S = numpy.repeat([e_positions[i]],len(R),axis=0)
+        ion_displacements = S-R
+        ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements))
+        V_ion = np.sum(Z/ion_distances)*q_e*q_e
+         
+        # electron-electron terms
+        S = numpy.repeat([e_positions[i]],len(e_positions-i+1),axis=0)
+        e_displacements = S-e_positions[i+1:] # only calculate distances to e- not already counted
+        e_distances = np.sqrt(np.sum(e_displacements*e_displacements))
+        V_e = np.sum(1.0/e_distances) * q_e*q_e
+
+    return V_ion + V_e
+
+
+
+
+
+
