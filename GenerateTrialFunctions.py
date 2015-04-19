@@ -59,14 +59,22 @@ def KineticTerm(e_positions):
     
     deriv_mat = SlaterMatrix(e_positions,psi_laplacian) # the slater matrix of the laplacians
     N = len(e_positions) # 
-
+    
     allSlaterMats = np.repeat([SlaterMatrix(e_positions,psi_array)],N,axis=0) # copy this matrix N times along dimension 0
+        
+    if np.version.version > '1.8':
+        for i in range(N):
+            allSlaterMats[i,i,:] = deriv_mat[i,:] # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
+            # First index: slice
+            # Second index: matrix row (which position)
+            # Third index: matrix column (which wavefunction)
     
-    for i in range(N):
-        allSlaterMats[i,i,:] = deriv_mat[i,:] # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
-        # First index: slice
-        # Second index: matrix row (which position)
-        # Third index: matrix column (which wavefunction)
-    
-    localKineticEnergy = np.sum(LA.det(allSlaterMats))/(N*SlaterDeterminant(SlaterMatrix(e_positions,psi_array))) # add together the determinants of each derivative matrix
+        localKineticEnergy = np.sum(LA.det(allSlaterMats)) # add together the determinants of each derivative matrix
+    else:
+        dets = np.zeros(N)
+        for i in range(N):
+            allSlaterMats[i,i,:] = deriv_mat[i,:] # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
+            dets[i] = LA.det(allSlaterMats[i,:,:])
+        localKineticEnergy = np.sum(dets)
+
     return localKineticEnergy
