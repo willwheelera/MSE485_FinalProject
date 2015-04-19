@@ -43,7 +43,7 @@ def MC_loop():
     Psi = GTF.PsiManyBody(e_positions)
     prob_old = Psi**2
     
-    E = np.zeros(steps)
+    E = np.zeros(2*steps)
     
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
@@ -72,7 +72,8 @@ def MC_loop():
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old
             collection_of_positions[2*t:2*t+2,:] = e_positions
-        E[t] = GTF.KineticTerm(e_positions)/Psi # TODO this is only kinetic
+            print e_positions
+	    E[2*t+i] = GTF.KineticTerm(e_positions)/Psi # TODO this is only kinetic
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
     
