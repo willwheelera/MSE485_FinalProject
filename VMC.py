@@ -29,9 +29,7 @@ sigma = 0.5
 steps = 2000
 moves_accepted = 0.0
 
-def MC_loop(Psi, N):
-    # Psi is the trial wavefunction. This function finds the energy of Psi using Monte Carlo
-    # N is the number of electrons
+def MC_loop():
     
     sigma = 0.5
     steps = 2000
@@ -66,35 +64,45 @@ def MC_loop(Psi, N):
                 # e_positions = e_positions_old
             collection_of_positions[t:t+1,:] = e_positions
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
+    
+    return collection_of_positions
 
+
+#############################################################
+# Run Simulation
+#############################################################
+
+if __name__ == '__main__':
+    
+    collection_of_positions = MC_loop()
 
 #############################################################
 # PLOT POSITIONS
 #############################################################
 
-x = collection_of_positions[:,0]
-y = collection_of_positions[:,1]
-z = collection_of_positions[:,2]
-
-
-#fig = plt.figure()
-#ax = fig.add_subplot(111, projection='3d')
-#ax.scatter(x, y, z, marker=".")#, zs)
-#ax.set_xlabel('X Label')
-#ax.set_ylabel('Y Label')
-#ax.set_zlabel('Z Label')
-#plt.show()
-
-nbins = 300
-H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
-Hmasked = np.ma.masked_where(H==0,H)
-fig2 = plt.figure()
-plt.pcolormesh(xedges,yedges,Hmasked)
-plt.xlabel('x')
-plt.ylabel('y')
-cbar = plt.colorbar()
-cbar.ax.set_ylabel('Counts of Psi')
-plt.show()
-
+    x = collection_of_positions[:,0]
+    y = collection_of_positions[:,1]
+    z = collection_of_positions[:,2]
+    
+    
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111, projection='3d')
+    #ax.scatter(x, y, z, marker=".")#, zs)
+    #ax.set_xlabel('X Label')
+    #ax.set_ylabel('Y Label')
+    #ax.set_zlabel('Z Label')
+    #plt.show()
+    
+    nbins = 300
+    H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
+    Hmasked = np.ma.masked_where(H==0,H)
+    fig2 = plt.figure()
+    plt.pcolormesh(xedges,yedges,Hmasked)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    cbar = plt.colorbar()
+    cbar.ax.set_ylabel('Counts of Psi')
+    plt.show()
+    
 
 
