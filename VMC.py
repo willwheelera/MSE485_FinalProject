@@ -44,14 +44,9 @@ def MC_loop():
     Psi = GTF.PsiManyBody(e_positions)
     prob_old = Psi**2
     
-<<<<<<< HEAD
-    E = np.zeros(2*steps)
-    
-=======
     E = np.zeros(steps)
     index = 0
 
->>>>>>> e20761c12277fcade5d87be09482e99c901c68eb
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
             # TODO I don't think we need this line: - Will
