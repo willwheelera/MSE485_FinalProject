@@ -26,14 +26,14 @@ def UpdatePosition(R,i,simga): #move the electron at the i'th position
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
-sigma = 0.5
-steps = 4000
-moves_accepted = 0.0
+#sigma = 0.5
+#steps = 4000
+#moves_accepted = 0.0
 
 def MC_loop():
     
     sigma = 0.5
-    steps = 100000
+    steps = 2
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -41,7 +41,7 @@ def MC_loop():
     N = len(e_positions)
     collection_of_positions = np.zeros((2*N*steps,3))
     
-    Psi = GTF.PsiManyBody(e_positions)
+    Psi, rPsi = GTF.PsiManyBody(e_positions)
     prob_old = Psi**2
     
     E = np.zeros(steps)
@@ -57,8 +57,8 @@ def MC_loop():
             # I don't think we need this: -Will
             # prob_old = GTF.PsiManyBody(e_positions_old)**2 #get modulus^2 of old wave function
             
-            Psi_new =  GTF.PsiManyBody(e_positions_new)
-            prob_new = Psi_new**2 #get modulus^2 of new wave function
+            Psi_new, rPsi_new =  GTF.PsiManyBody(e_positions_new)
+            prob_new = rPsi_new**2 #get modulus^2 of new wave function
             ratio = prob_new/prob_old #take the ratio of the squares
 
             ## A = min(1,ratio) # Acceptance crtierion - this is automatically satisfied in our probability checking
@@ -70,6 +70,7 @@ def MC_loop():
                 moves_accepted += 1.0
                 prob_old = prob_new
                 Psi = Psi_new
+                rPsi = rPsi_new
             #else:
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old

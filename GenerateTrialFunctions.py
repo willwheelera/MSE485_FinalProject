@@ -17,6 +17,7 @@ psi_array = GSF.getH2Functions()  #generate array of objective basis states
 psi_laplacian = GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
 R = GSF.ion_positions
 Z = GSF.ion_charges  
+N = len(R)
 
 def setAtomicWavefunctions(wfnArray):
     psi_array = wfnArray
@@ -34,7 +35,11 @@ def SlaterDeterminant(slater_matrix):
 
 def PsiManyBody(e_positions):
     slater_matrix = SlaterMatrix(e_positions,psi_array)
-    return SlaterDeterminant(slater_matrix)
+    print (e_positions)
+    print(R)
+    disp_matrix = np.repeat([e_positions],N,axis=0).transpose() - np.repeat([R],N,axis=0)
+    # return Psi_MB and (r-R)Psi_MB (MB = many-body)
+    return SlaterDeterminant(slater_matrix), SlaterDeterminant(slater_matrix*disp_matrix)
 
 ##########################################
 # TODO don't need this function
@@ -101,7 +106,6 @@ def PotentialTerm(e_positions):
         V_e = np.sum(1.0/e_distances) * q_e2
 
     return V_ion + V_e
-
 
 
 
