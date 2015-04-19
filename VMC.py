@@ -44,14 +44,9 @@ def MC_loop():
     Psi = GTF.PsiManyBody(e_positions)
     prob_old = Psi**2
     
-<<<<<<< HEAD
-    E = np.zeros(2*steps)
-    
-=======
     E = np.zeros(steps)
     index = 0
 
->>>>>>> e20761c12277fcade5d87be09482e99c901c68eb
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
             # TODO I don't think we need this line: - Will
@@ -126,7 +121,8 @@ if __name__ == '__main__':
     plt.ylabel('y')
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts of Psi')
-    
+
+    # TODO plot average energy
     # ENERGY TRACE
     plt.subplot(2,1,2)
     plt.plot(E)

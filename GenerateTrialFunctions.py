@@ -15,6 +15,8 @@ from numpy import random
 # Define the atomic wavefunctions
 psi_array = GSF.getH2Functions()  #generate array of objective basis states
 psi_laplacian = GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
+R = GSF.ion_positions
+Z = GSF.ion_charges  
 
 def setAtomicWavefunctions(wfnArray):
     psi_array = wfnArray
@@ -22,7 +24,7 @@ def setAtomicWavefunctions(wfnArray):
 def SlaterMatrix(e_positions,psi_array):
     slater_matrix = np.zeros((len(e_positions),(len(e_positions))))
     for j in range(0, len(psi_array)):
-        slater_matrix[j,:] = psi_array[j](e_positions) #build slater determinant
+        slater_matrix[j,:] = psi_array[j](e_positions)  #build slater determinant
     return slater_matrix
 
 def SlaterDeterminant(slater_matrix):
@@ -82,8 +84,7 @@ def KineticTerm(e_positions):
     return localKineticEnergy
 
 def PotentialTerm(e_positions):
-    R = GSF.ion_positions
-    Z = GSF.ion_charges
+    
     q_e2 = GSF.q_e**2
 
     for i in range(len(e_positions)):
