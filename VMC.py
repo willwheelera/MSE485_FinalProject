@@ -40,7 +40,8 @@ def MC_loop():
     N = len(e_positions)
     collection_of_positions = np.zeros((2*N*steps,3))
     
-    prob_old = GTF.PsiManyBody(e_positions)**2
+    Psi = GTF.PsiManyBody(e_positions)
+    prob_old = Psi**2
     
     E = np.zeros(steps)
     
@@ -54,7 +55,8 @@ def MC_loop():
             # I don't think we need this: -Will
             # prob_old = GTF.PsiManyBody(e_positions_old)**2 #get modulus^2 of old wave function
             
-            prob_new = GTF.PsiManyBody(e_positions_new)**2 #get modulus^2 of new wave function
+            Psi_new =  GTF.PsiManyBody(e_positions_new)
+            prob_new = Psi_new**2 #get modulus^2 of new wave function
             ratio = prob_new/prob_old #take the ratio of the squares
 
             ## A = min(1,ratio) # Acceptance crtierion - this is automatically satisfied in our probability checking
@@ -65,11 +67,12 @@ def MC_loop():
                 e_positions = e_positions_new
                 moves_accepted += 1.0
                 prob_old = prob_new
+                Psi = Psi_new
             #else:
                 # I don't think we need this: - Will
                 # e_positions = e_positions_old
             collection_of_positions[2*t:2*t+2,:] = e_positions
-        E[t] = GTF.KineticTerm(e_positions) # TODO this is only kinetic
+        E[t] = GTF.KineticTerm(e_positions)/Psi # TODO this is only kinetic
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
     
