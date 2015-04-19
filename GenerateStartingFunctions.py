@@ -17,8 +17,9 @@ k_e = 1.0 # Coulomb's constant (1/4\pi\epsilon_0)
 
 # Define atom positions
 ion_positions = np.zeros((2,3))
-R1 = np.array([-0.5,0,0])*a_B
-R2 = np.array([0.5,0,0])*a_B
+ion_sep = 2.0
+R1 = np.array([-0.5*ion_sep,0,0])*a_B
+R2 = np.array([0.5*ion_sep,0,0])*a_B
 ion_positions[0,:] = R1
 ion_positions[1,:] = R2
 ion_charges = np.array([1.0,1.0])

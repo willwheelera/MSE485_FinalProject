@@ -33,7 +33,7 @@ moves_accepted = 0.0
 def MC_loop():
     
     sigma = 0.5
-    steps = 10000
+    steps = 100000
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -77,7 +77,7 @@ def MC_loop():
             index += 2
         
         E[t] = GTF.KineticTerm(e_positions)/Psi + GTF.PotentialTerm(e_positions)
-        printtime = 500
+        printtime = 5000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
