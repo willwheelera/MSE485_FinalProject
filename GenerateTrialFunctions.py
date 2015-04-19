@@ -68,5 +68,5 @@ def KineticTerm(e_positions):
         # Second index: matrix row (which position)
         # Third index: matrix column (which wavefunction)
     
-    localKineticEnergy = np.sum(LA.det(allSlaterMats)) # add together the determinants of each derivative matrix
+    localKineticEnergy = np.sum(LA.det(allSlaterMats))/(N*SlaterDeterminant(SlaterMatrix(e_positions,psi_array))) # add together the determinants of each derivative matrix
     return localKineticEnergy

@@ -26,7 +26,7 @@ def UpdatePosition(R,i,simga): #move the electron at the i'th position
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
 sigma = 0.5
-steps = 2000
+steps = 4000
 moves_accepted = 0.0
 
 def MC_loop():
