@@ -4,36 +4,36 @@ import matplotlib.pyplot as plt
 import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
-
-def MC_loop(Psi, N):
-  # Psi is the trial wavefunction. This function finds the energy of Psi using Monte Carlo
-  # N is the number of electrons
-  R = InitializePositions(N)
-
-# TODO
-# We probably don't need this function
-#def InitializePositions(N):
-#  R = numpy.zeros((N,3))
-#  return R
+import sys
 
 
-def UpdatePosition(R,i,simga): #move the electron at the i'th position
+def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
     dr = np.random.randn(3)*sigma
     R_update[i,:] = R_update[i,:] + dr
-    return(R_update)
+    return(R_update, 1.0) # return new_position, T_ratio
+# TODO: is copying the whole array less efficient than the version in the HW?
+
+# TODO finish  Force-bias moves
+def ForceBiasMove(wf,e_positions,i,sigma):
+    # calculate force (needs WaveFunctionClass to have gradient function)
+    # generate move
+    # calculate T ratio
+    new_positions = e_positions.copy() # TODO
+    T_ratio = 1.0 # TODO
+    return new_positions, T_ratio # TODO: is copying whole arrays less efficient than in HW?
 
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
-#sigma = 0.5
-#steps = 4000
-#moves_accepted = 0.0
+sigma_default = 0.5
+steps_default = 4000
 
-def MC_loop():
+bond_distance = 1.0
+WF = GTF.H2Molecule(bond_distance)
+
+def MC_loop(steps=1000, sigma=0.5):
     
-    sigma = 0.5
-    steps = 100
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -41,7 +41,7 @@ def MC_loop():
     N = len(e_positions)
     collection_of_positions = np.zeros((2*N*steps,3))
     
-    Psi = GTF.PsiManyBody(e_positions)
+    Psi = WF.PsiManyBody(e_positions)
     prob_old = Psi**2
     
     E = np.zeros(steps)
@@ -49,15 +49,10 @@ def MC_loop():
 
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
-            # TODO I don't think we need this line: - Will
-            # e_positions_old = e_positions.copy() #generate array of old electron positions
             
-            e_positions_new = UpdatePosition(e_positions,i,sigma) #generate array of new electron poisitons
+            e_positions_new, T_ratio = UpdatePosition(e_positions,i,sigma) #generate array of new electron poisitons
             
-            # I don't think we need this: -Will
-            # prob_old = GTF.PsiManyBody(e_positions_old)**2 #get modulus^2 of old wave function
-            
-            Psi_new =  GTF.PsiManyBody(e_positions_new)
+            Psi_new =  WF.PsiManyBody(e_positions_new)
             prob_new = Psi_new**2 #get modulus^2 of new wave function
             ratio = prob_new/prob_old #take the ratio of the squares
 
@@ -70,13 +65,11 @@ def MC_loop():
                 moves_accepted += 1.0
                 prob_old = prob_new
                 Psi = Psi_new
-            #else:
-                # I don't think we need this: - Will
-                # e_positions = e_positions_old
+
             collection_of_positions[index:index+2,:] = e_positions
             index += 2
         
-        E[t] = GTF.KineticTerm(e_positions)/Psi + GTF.PotentialTerm(e_positions)
+        E[t] = WF.LocalEnergy(e_positions, Psi)
         printtime = 5000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
@@ -91,7 +84,11 @@ def MC_loop():
 
 if __name__ == '__main__':
     
-    collection_of_positions, E = MC_loop()
+    steps = 1000
+    
+    if len(sys.argv) > 1:
+        steps_input = int(sys.argv[1])
+    collection_of_positions, E = MC_loop(steps=steps_input)
 
 #############################################################
 # PLOT POSITIONS

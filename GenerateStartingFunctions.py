@@ -45,7 +45,13 @@ def Laplacian_R20(rvec):
   r = np.sqrt(np.sum(rvec*rvec,1))
   return (1.0/(2.0*math.sqrt(2.0)))*a_B**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
 
+####################################
+# 
+
 # S orbitals
+def psi_1s(e_pos_vec,i_pos):
+  return Y00 * R10(e_pos_vec - i_pos)
+
 def psi_s1(rvec):
   return Y00 * R10(rvec-R1)
 
@@ -53,6 +59,9 @@ def psi_s2(rvec):
   return Y00 * R10(rvec-R2)
 
 # Laplacian of S orbitals
+def Lpsi_1s(e_pos_vec, i_pos):
+  return Y00 * Laplacian_R10(e_pos_vec - i_pos)
+
 def Lpsi_s1(rvec):
   return Y00 * Laplacian_R10(rvec-R1) # TODO
 
