@@ -72,7 +72,7 @@ class WaveFunctionClass:
                 # Second index: matrix row (which position)
                 # Third index: matrix column (which wavefunction)
         
-            localKineticEnergy = np.sum(LA.det(allSlaterMats)) # add together the determinants of each derivative matrix
+            localKineticEnergy = np.sum(LA.det(allSlaterMats)) / psi_at_rvec # add together the determinants of each derivative matrix
         else:
             dets = np.zeros(N)
             for i in range(N):
