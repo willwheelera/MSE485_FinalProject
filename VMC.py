@@ -33,7 +33,7 @@ moves_accepted = 0.0
 def MC_loop():
     
     sigma = 0.5
-    steps = 100000
+    steps = 5000
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -42,7 +42,7 @@ def MC_loop():
     collection_of_positions = np.zeros((2*N*steps,3))
     
     Psi = GTF.PsiManyBody(e_positions)
-    prob_old = Psi**2
+    prob_old = Psi**2 * GTF.ProductDistSquared(e_positions)
     
     E = np.zeros(steps)
     index = 0
@@ -58,7 +58,7 @@ def MC_loop():
             # prob_old = GTF.PsiManyBody(e_positions_old)**2 #get modulus^2 of old wave function
             
             Psi_new =  GTF.PsiManyBody(e_positions_new)
-            prob_new = Psi_new**2 #get modulus^2 of new wave function
+            prob_new = Psi_new**2 * GTF.ProductDistSquared(e_positions) #get modulus^2 of new wave function
             ratio = prob_new/prob_old #take the ratio of the squares
 
             ## A = min(1,ratio) # Acceptance crtierion - this is automatically satisfied in our probability checking

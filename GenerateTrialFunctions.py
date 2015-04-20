@@ -91,7 +91,7 @@ def PotentialTerm(e_positions):
         S = np.repeat([e_positions[i,:]],len(R),axis=0)
         ion_displacements = S-R
         ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
-        V_ion = np.sum(Z/ion_distances) * q_e2
+        V_ion = -np.sum(Z/ion_distances) * q_e2
          
         # electron-electron terms
         S = np.repeat([e_positions[i,:]],len(e_positions)-i-1,axis=0)
@@ -101,7 +101,8 @@ def PotentialTerm(e_positions):
 
     return V_ion + V_e
 
-
+def ProductDistSquared(e_positions):
+    return np.prod(np.sum(e_positions*e_positions,1))
 
 
 
