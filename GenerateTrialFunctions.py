@@ -89,7 +89,7 @@ class WaveFunctionClass:
             S = np.repeat([e_positions[i,:]],N,axis=0)
             ion_displacements = S - self.ion_positions
             ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
-            V_ion = np.sum(self.ion_charges/ion_distances) * q_e2
+            V_ion = -np.sum(self.ion_charges/ion_distances) * q_e2
              
             # electron-electron terms
             S = np.repeat([e_positions[i,:]],len(e_positions)-i-1,axis=0)
