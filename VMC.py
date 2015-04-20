@@ -89,7 +89,9 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         steps_input = int(sys.argv[1])
     collection_of_positions, E = MC_loop(steps=steps_input)
-
+ 
+    Eavg=np.average(E)
+    print Eavg
 #############################################################
 # PLOT POSITIONS
 #############################################################
@@ -123,6 +125,8 @@ if __name__ == '__main__':
     # ENERGY TRACE
     plt.subplot(2,1,2)
     plt.plot(E)
+    #add a horizontal line of Eavg
+    plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
 
