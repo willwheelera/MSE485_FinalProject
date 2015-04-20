@@ -60,7 +60,7 @@ def psi_s2(rvec):
 
 # Laplacian of S orbitals
 def Lpsi_1s(e_pos_vec, i_pos):
-  return Y00 * Laplacian_R10(e_pos_vec - i_pos)
+  return Y00 * Laplacian_R10(e_pos_vec - i_pos) * (-hbar*hbar*0.5/m_e)
 
 def Lpsi_s1(rvec):
   return Y00 * Laplacian_R10(rvec-R1) # TODO
