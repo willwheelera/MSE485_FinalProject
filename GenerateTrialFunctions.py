@@ -37,9 +37,13 @@ def PsiManyBody(e_positions):
     slater_matrix = SlaterMatrix(e_positions,psi_array)
     print (e_positions)
     print(R)
-    disp_matrix = np.repeat([e_positions],N,axis=0).transpose() - np.repeat([R],N,axis=0)
-    # return Psi_MB and (r-R)Psi_MB (MB = many-body)
-    return SlaterDeterminant(slater_matrix), SlaterDeterminant(slater_matrix*disp_matrix)
+    # make a "slater matrix" of displacements of electrons from ions (e-pos index is row, ion-pos index is col)
+    # This matrix is Nx3xN, 1st dim is e-pos, 2nd dim is xyz, 3rd dim is ion-pos
+    disp_matrix = np.tile([e_positions],(1,1,N)) - np.swapaxes(np.tile([R],(1,1,N)),0,2)
+    # make the "slater matrix" of distances of electrons from ions by summing squares of disp_mat.
+    dist2_matrix = np.swapaxes(np.sum(disp_matrix*disp_matrix,1),1,2)
+    # return Psi_MB and (r-R)^2Psi_MB (MB = many-body)
+    return SlaterDeterminant(slater_matrix), SlaterDeterminant(slater_matrix*dist2_matrix)
 
 ##########################################
 # TODO don't need this function
