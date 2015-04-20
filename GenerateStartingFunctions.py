@@ -8,12 +8,11 @@ import math
 
 # Hydrogen H2 Molecule from atomic wavefunctions
 # Atomic units
-a_B = 1.0 # Bohr radius
-m_e = 1.0 # electron mass
-q_e = 1.0 # electron charge
-hbar = 1.0 # reduced planck constant
-k_e = 1.0 # Coulomb's constant (1/4\pi\epsilon_0)
-
+m_e = 1.0 #* 9.11e-31 # electron mass
+q_e = 1.0 #* 1.602e-19 # electron charge
+hbar = 1.0 #* 1.0546e-34 # reduced planck constant
+k_e = 1.0 #/ (4*np.pi * 8.854e-12) # Coulomb's constant (1/4\pi\epsilon_0)
+a_B = 1.0 #* hbar*hbar / (k_e*m_e*q_e**2) # Bohr radius
 
 # Define atom positions
 ion_positions = np.zeros((2,3))
@@ -35,7 +34,7 @@ def R10(rvec):
 
 def R20(rvec):
   r = np.sqrt(np.sum(rvec*rvec,1))
-  return (1.0/(2.0*math.sqrt(2.0)))*a_B**(-1.5)*(2.0-(r/a_B))*np.exp(-2.0*r/a_B)
+  return (2*a_B)**(-1.5)*(2.0-(r/a_B))*np.exp(-2.0*r/a_B)
   
 def Laplacian_R10(rvec):
   r = np.sqrt(np.sum(rvec*rvec,1))
@@ -43,7 +42,8 @@ def Laplacian_R10(rvec):
 
 def Laplacian_R20(rvec):
   r = np.sqrt(np.sum(rvec*rvec,1))
-  return (1.0/(2.0*math.sqrt(2.0)))*a_B**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
+  return 4*(2*a_B)**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
+  #return (1.0/(2.0*math.sqrt(2.0)))*a_B**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
 
 ####################################
 # 

@@ -26,14 +26,15 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
-sigma_default = 0.5
+sigma_default = 0.5 
 steps_default = 4000
 
 bond_distance = 1.0
 WF = GTF.H2Molecule(bond_distance)
 
-def MC_loop(steps=1000, sigma=0.5):
+def MC_loop(steps=1000, sig=0.5):
     
+    sigma = sig * GSF.a_B # scale the move distance by Bohr radius
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -43,7 +44,7 @@ def MC_loop(steps=1000, sigma=0.5):
     
     Psi = WF.PsiManyBody(e_positions)
     prob_old = Psi**2
-    
+    print('initial prob: ', prob_old)
     E = np.zeros(steps)
     index = 0
 
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     collection_of_positions, E = MC_loop(steps=steps_input)
  
     Eavg=np.average(E)
-    print Eavg
+    print 'Avg Energy: '+str(Eavg)
 #############################################################
 # PLOT POSITIONS
 #############################################################
