@@ -8,6 +8,20 @@ from numpy import random
 # 1. Compute a Slater determinant
 # 2. Multiply a Jastrow factor TODO
 
+def HydrogenAtom():
+    psi_array = np.array([GSE.psi_1s])
+    psi_laplacian = np.array([GSF.Lpsi_1s])
+    ion_positions = np.array([0.0,0.0,0.0])*GSF.a_B
+    ion_charges = np.array([1.0])
+
+    wf = WaveFunctionClass()
+    wf.setAtomicWavefunctions(psi_array)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setIonPositions(ion_positions)
+    wf.setIonCharges(ion_charges)
+    return wf
+
+
 def H2Molecule(ion_sep):
     # ion_sep is in atomic units of Bohr radius
     psi_array = np.array([GSF.psi_1s, GSF.psi_1s])
