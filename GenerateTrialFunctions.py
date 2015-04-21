@@ -40,10 +40,10 @@ def H2Molecule(ion_sep):
 
 class WaveFunctionClass:
     # Define the atomic wavefunctions
-    psi_array = GSF.getH2Functions()  #generate array of objective basis states
-    psi_laplacian = GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
-    ion_positions = GSF.ion_positions
-    ion_charges = GSF.ion_charges  
+    psi_array = [] # GSF.getH2Functions()  #generate array of objective basis states
+    psi_laplacian = [] # GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
+    ion_positions = [] # GSF.ion_positions
+    ion_charges = [] # GSF.ion_charges  
     N = len(ion_positions)
     
     def setAtomicWavefunctions(self, wfnArray):
@@ -101,20 +101,21 @@ class WaveFunctionClass:
     
         # POTENTIAL TERM
         q_e2k = GSF.q_e**2 * GSF.k_e
-    
-        for i in range(len(e_positions)):
+        V_ion = 0
+        V_e = 0
+        for i in range(N):
             # electron-ion terms
             S = np.repeat([e_positions[i,:]],N,axis=0)
             ion_displacements = S - self.ion_positions
             ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
-            V_ion = -np.sum(self.ion_charges/ion_distances) * q_e2k
-             
+            V_ion += -np.sum(self.ion_charges/ion_distances) * q_e2k
+            
             # electron-electron terms
             S = np.repeat([e_positions[i,:]],len(e_positions)-i-1,axis=0)
             e_displacements = S - e_positions[i+1:,:] # only calculate distances to e- not already counted
             e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
-            V_e = np.sum(1.0/e_distances) * q_e2k
-    
+            V_e += np.sum(1.0/e_distances) * q_e2k
+            
         return V_ion + V_e + localKineticEnergy
 
 

@@ -30,7 +30,7 @@ sigma_default = 0.5
 steps_default = 4000
 
 bond_distance = 1.0
-WF = GTF.HydrogenAtom()
+WF = GTF.H2Molecule(2.0)
 
 def MC_loop(steps=1000, sig=0.5):
     
@@ -85,11 +85,11 @@ def MC_loop(steps=1000, sig=0.5):
 
 if __name__ == '__main__':
     
-    steps = 1000
+    steps_input = 1000
     
     if len(sys.argv) > 1:
         steps_input = int(sys.argv[1])
-    collection_of_positions, E = MC_loop(steps=steps_input)
+    collection_of_positions, E = MC_loop(steps_input)
  
     Eavg=np.average(E)
     print 'Avg Energy: '+str(Eavg)

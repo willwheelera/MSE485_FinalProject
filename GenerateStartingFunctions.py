@@ -28,22 +28,28 @@ Y00 = (4.0*math.pi)**(-0.5)
 
 # Radial functions
 # Note: this function requires that position coordinates are along dimension 1 of the array (not 0)
-def R10(rvec):
+def R10(rvec, Z=1.0):
   r = np.sqrt(np.sum(rvec*rvec,1))
-  return 2*a_B**(-1.5)*np.exp(-r/a_B)
+  a = a_B/Z
+  return 2*a**(-1.5)*np.exp(-r/a)
 
-def R20(rvec):
-  r = np.sqrt(np.sum(rvec*rvec,1))
-  return (2*a_B)**(-1.5)*(2.0-(r/a_B))*np.exp(-2.0*r/a_B)
+def R20(rvec, Z=1.0):
+  a = 2*a_B/Z
+  rb = np.sqrt(np.sum(rvec*rvec,1)) / a
+  return 2*a**(-1.5)*(1.0-rb)*np.exp(-rb)
   
-def Laplacian_R10(rvec):
-  r = np.sqrt(np.sum(rvec*rvec,1))
-  return 2*a_B**(-3.5)*np.exp(-r/a_B)
+def Laplacian_R10(rvec, Z=1.0):
+  a = a_B/Z
+  rb = np.sqrt(np.sum(rvec*rvec,1)) / a
+  #return 2*a**(-3.5)*np.exp(-r/a)
+  return 2*a**(-3.5)*(1.0 - 2.0/rb) * np.exp(-rb)
 
-def Laplacian_R20(rvec):
-  r = np.sqrt(np.sum(rvec*rvec,1))
-  return 4*(2*a_B)**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
+def Laplacian_R20(rvec, Z=1.0):
+  a = 2*a_B/Z
+  rb = np.sqrt(np.sum(rvec*rvec,1)) / a # change of vars makes formula simpler: rb = r/a = r*Z / 2*a_B
+  #return 4*(2*a_B)**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
   #return (1.0/(2.0*math.sqrt(2.0)))*a_B**(-3.5)*(1.5-(r/(4.0*a_B)))*np.exp(-2.0*r/a_B)
+  return -2*a**(-3.5)/rb * (rb-4)*(rb-1)*np.exp(-rb)
 
 ####################################
 # 
