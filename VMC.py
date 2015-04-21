@@ -30,14 +30,14 @@ sigma_default = 0.5
 steps_default = 4000
 
 bond_distance = 1.0
-WF = GTF.H2Molecule(bond_distance)
+WF = GTF.HydrogenAtom()
 
 def MC_loop(steps=1000, sig=0.5):
     
     sigma = sig * GSF.a_B # scale the move distance by Bohr radius
     moves_accepted = 0.0
     
-    e_positions = GSF.InitializeElectrons()
+    e_positions = WF.InitializeElectrons()
     e_positions_new = e_positions.copy()
     N = len(e_positions)
     collection_of_positions = np.zeros((2*N*steps,3))

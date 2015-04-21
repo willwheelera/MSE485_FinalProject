@@ -83,7 +83,5 @@ def getIonPositions():
 def getIonCharges():
   return ion_charges
 
-def InitializeElectrons():
-    e_positions = ion_positions + np.random.randn(2,3) * a_B # generate array of electron positions
-    return e_positions
+
 

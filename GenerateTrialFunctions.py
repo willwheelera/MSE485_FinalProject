@@ -9,9 +9,9 @@ from numpy import random
 # 2. Multiply a Jastrow factor TODO
 
 def HydrogenAtom():
-    psi_array = np.array([GSE.psi_1s])
+    psi_array = np.array([GSF.psi_1s])
     psi_laplacian = np.array([GSF.Lpsi_1s])
-    ion_positions = np.array([0.0,0.0,0.0])*GSF.a_B
+    ion_positions = np.array([[0.0,0.0,0.0]])*GSF.a_B
     ion_charges = np.array([1.0])
 
     wf = WaveFunctionClass()
@@ -58,6 +58,10 @@ class WaveFunctionClass:
     
     def setIonCharges(self, charges):
         self.ion_charges = charges
+    
+    def InitializeElectrons(self):
+        e_positions = self.ion_positions + np.random.randn(self.N,3) * GSF.a_B # generate array of electron positions
+        return e_positions
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self, e_positions):
