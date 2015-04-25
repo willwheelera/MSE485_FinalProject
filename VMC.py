@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
+from mpl_toolkits.mplot3d import Axes3D
 
 def MC_loop(Psi, N):
   # Psi is the trial wavefunction. This function finds the energy of Psi using Monte Carlo
@@ -33,7 +34,7 @@ moves_accepted = 0.0
 def MC_loop():
     
     sigma = 0.5
-    steps = 100000
+    steps = 5000
     moves_accepted = 0.0
     
     e_positions = GSF.InitializeElectrons()
@@ -44,14 +45,9 @@ def MC_loop():
     Psi = GTF.PsiManyBody(e_positions)
     prob_old = Psi**2
     
-<<<<<<< HEAD
-    E = np.zeros(2*steps)
-    
-=======
     E = np.zeros(steps)
     index = 0
 
->>>>>>> e20761c12277fcade5d87be09482e99c901c68eb
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
             # TODO I don't think we need this line: - Will
@@ -82,7 +78,8 @@ def MC_loop():
             index += 2
         
         E[t] = GTF.KineticTerm(e_positions)/Psi + GTF.PotentialTerm(e_positions)
-        printtime = 5000
+        
+	printtime = 5000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
@@ -97,7 +94,8 @@ def MC_loop():
 if __name__ == '__main__':
     
     collection_of_positions, E = MC_loop()
-
+    Eavg=np.sum(E[1])
+    print Eavg,len(E)
 #############################################################
 # PLOT POSITIONS
 #############################################################
@@ -106,7 +104,7 @@ if __name__ == '__main__':
     y = collection_of_positions[:,1]
     z = collection_of_positions[:,2]
     
-    # 3D SCATTER PLOT
+    ### 3D SCATTER PLOT
     #fig = plt.figure()
     #ax = fig.add_subplot(111, projection='3d')
     #ax.scatter(x, y, z, marker=".")#, zs)
@@ -114,25 +112,26 @@ if __name__ == '__main__':
     #ax.set_ylabel('Y Label')
     #ax.set_zlabel('Z Label')
     #plt.show()
-    
+   
     # 2D HISTOGRAM
     nbins = 200
     H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
     Hmasked = np.ma.masked_where(H==0,H)
-    #fig2 = plt.figure()
     plt.subplot(2,1,1)
     plt.pcolormesh(xedges,yedges,Hmasked)
     plt.xlabel('x')
     plt.ylabel('y')
     cbar = plt.colorbar()
-    cbar.ax.set_ylabel('Counts of Psi')
+    cbar.ax.set_ylabel('Counts of Psi')                
     
     # ENERGY TRACE
     plt.subplot(2,1,2)
     plt.plot(E)
+    #add a horizontal line of Eavg
+    plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r',linewidth='2')
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
-
+ 
     plt.show()
     
 
