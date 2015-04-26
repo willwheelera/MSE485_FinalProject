@@ -38,6 +38,18 @@ def H2Molecule(ion_sep):
     wf.setIonCharges(ion_charges)
     return wf
 
+def IonPotentialEnergy(ion_positions,ion_charges):
+    q_e2k = GSF.q_e**2 * GSF.k_e 
+    V_ion=0.0
+    for i in range(0,len(ion_positions)):
+       S = np.repeat([ion_positions[i,:]],len(ion_positions)-i-1,axis=0)
+       ion_displacements = S - ion_positions[i+1:,:] # only calculate distances to e- not already counted
+       ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
+       C = np.repeat([ion_charges[i]],len(ion_charges)-i-1,axis=0)
+       Z1Z2 = np.outer(C,ion_positions[i+1:]).diagonal()
+       V_ion += np.sum(1.0*Z1Z2/ion_distances) * q_e2k                                                        
+    return V_ion
+
 class WaveFunctionClass:
     # Define the atomic wavefunctions
     psi_array = [] # GSF.getH2Functions()  #generate array of objective basis states
@@ -114,7 +126,7 @@ class WaveFunctionClass:
             S = np.repeat([e_positions[i,:]],len(e_positions)-i-1,axis=0)
             e_displacements = S - e_positions[i+1:,:] # only calculate distances to e- not already counted
             e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
-            V_e += np.sum(1.0/e_distances) * q_e2k
+            V_e += np.sum(1.0/e_distances) * q_e2k                                                        
             
         return V_ion + V_e + localKineticEnergy
 

@@ -5,7 +5,7 @@ import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
-
+from scipy import optimize
 
 def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
@@ -78,6 +78,23 @@ def MC_loop(steps=1000, sig=0.5):
     
     return collection_of_positions, E
 
+
+#############################################################
+# Golden Section Search Search in 1D
+#############################################################
+# a scalar function to call
+
+def Etot(L):
+    steps_input=5000
+    WF = GTF.H2Molecule(L)
+    Eion= GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges)  #Ion potential energy
+    Eavg=np.average(MC_loop(steps_input)[1]) + Eion 
+    return Eavg
+    
+#define the initial bracket of variable 
+(low,high)=(0.5,3.5)   # guess a reasonale range
+E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
+print E_L.x
 
 #############################################################
 # RUN SIMULATIONS
