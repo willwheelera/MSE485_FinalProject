@@ -19,6 +19,8 @@ def HydrogenAtom():
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
+
+    print 'Simulating HydrogenAtom'
     return wf
 
 
@@ -36,6 +38,8 @@ def H2Molecule(ion_sep):
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
+    
+    print 'Simulating H2Molecule'
     return wf
 
 class WaveFunctionClass:
@@ -45,6 +49,14 @@ class WaveFunctionClass:
     ion_positions = [] # GSF.ion_positions
     ion_charges = [] # GSF.ion_charges  
     N = len(ion_positions)
+    N_up = 0
+    # Jastrow parameters
+    Aee_same = 0.25 # parallel cusp condition, Drummonds et al
+    Aee_anti = 0.5 # anti-parallel cusp condition, Drummonds et al
+    Bee_same = 1.0 # ?
+    Bee_anti = 1.0 # ?
+    Cen = ion_charges # Nucleus cusp condition, Drummonds et al
+    Den = 1.0
     
     def setAtomicWavefunctions(self, wfnArray):
         self.psi_array = wfnArray
@@ -58,16 +70,60 @@ class WaveFunctionClass:
     
     def setIonCharges(self, charges):
         self.ion_charges = charges
+        self.Cen = charges
     
     def InitializeElectrons(self):
         e_positions = self.ion_positions + np.random.randn(self.N,3) * GSF.a_B # generate array of electron positions
         return e_positions
 
+    def setNup(self, num):
+        self.N_up = num
+
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self, e_positions):
-        slater_matrix = SlaterMatrix(e_positions, self.ion_positions, self.psi_array)
-        return SlaterDeterminant(slater_matrix)
+        N_up = self.N_up
+        if N_up > 0:
+            slater_matrix_up = SlaterMatrix(e_positions[0:N_up], self.ion_positions[0:N_up], self.psi_array[0:N_up])
+            slater_det_up = SlaterDeterminant(slater_matrix_up)
+        else:
+            slater_det_up = 1
+        if N_up < self.N:
+            slater_matrix_down = SlaterMatrix(e_positions[N_up:], self.ion_positions[N_up:], self.psi_array[N_up:])
+            slater_det_down = SlaterDeterminant(slater_matrix_down)
+        else:
+            slater_det_down = 1
+
+        return slater_det_up * slater_det_down * self.Jastrow(e_positions)
     
+    def Jastrow(self, e_positions):
+        Uen = 0
+        Uee = 0
+        N_up = self.N_up
+        for i in range(len(e_positions)):
+            # Compute ion distances from electron i
+            ion_disp = self.ion_positions - e_positions[i]
+            ion_dist = np.sqrt(np.sum(ion_disp*ion_disp, axis=1))
+            #print 'ion_dist',ion_dist
+            #print 'Cen',self.Cen
+            #print 'numerator',self.Cen*ion_dist
+            #print 'denominator',(1+self.Den*ion_dist)
+            # update electron-ion energy term
+            en_sum = np.sum(self.Cen*ion_dist/(1+self.Den*ion_dist))
+            Uen += en_sum
+            # Compute electron distances from electron i (only further in the list - count each pair once)
+            e_disp = e_positions[i+1:] - e_positions[i]
+            e_dist = np.sqrt(np.sum(e_disp*e_disp,axis=1))
+            if i < N_up: # if this electron is spin up
+                e_same = e_dist[0:N_up-i-1] # electrons [i+1:N_up]
+                e_anti = e_dist[N_up-i-1:]
+                Uee += np.sum(self.Aee_same*e_same/(1+self.Bee_same*e_same))
+                Uee += np.sum(self.Aee_anti*e_anti/(1+self.Bee_anti*e_anti))
+            else: # if this electron is spin down
+                # all the distances are to other down electrons
+                Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
+        
+        return np.exp(Uee - Uen)
+
     ##########################################
     # LOCAL ENERGY
     def LocalEnergy(self, e_positions, psi_at_rvec):
@@ -121,6 +177,7 @@ class WaveFunctionClass:
 
 # SLATER DETERMINANT    
 def SlaterMatrix(e_positions,ion_positions,fn_array):
+    # fn_array has the basis wavefunctions centered at the origin (shifted to the ion_position passed in as argument)
     slater_matrix = np.zeros((len(e_positions),(len(e_positions))))
     for j in range(0, len(fn_array)):
         slater_matrix[j,:] = fn_array[j](e_positions,ion_positions[j,:])  #build slater matrix
