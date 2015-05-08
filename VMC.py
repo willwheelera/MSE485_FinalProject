@@ -102,7 +102,7 @@ print E_L.x
 
 if __name__ == '__main__':
     
-    steps_input = 1000
+    steps_input = steps_default
     
     if len(sys.argv) > 1:
         steps_input = int(sys.argv[1])
