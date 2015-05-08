@@ -5,7 +5,7 @@ import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
-
+from scipy import optimize
 
 def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
@@ -80,6 +80,23 @@ def MC_loop(steps=1000, sig=0.5):
 
 
 #############################################################
+# Golden Section Search Search in 1D
+#############################################################
+# a scalar function to call
+
+def Etot(L):
+    steps_input=5000
+    WF = GTF.H2Molecule(L)
+    Eion= GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges)  #Ion potential energy
+    Eavg=np.average(MC_loop(steps_input)[1]) + Eion 
+    return Eavg
+    
+#define the initial bracket of variable 
+(low,high)=(0.5,3.5)   # guess a reasonale range
+E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
+print E_L.x
+
+#############################################################
 # RUN SIMULATIONS
 #############################################################
 
@@ -101,7 +118,7 @@ if __name__ == '__main__':
     y = collection_of_positions[:,1]
     z = collection_of_positions[:,2]
     
-    # 3D SCATTER PLOT
+    ### 3D SCATTER PLOT
     #fig = plt.figure()
     #ax = fig.add_subplot(111, projection='3d')
     #ax.scatter(x, y, z, marker=".")#, zs)
@@ -109,12 +126,11 @@ if __name__ == '__main__':
     #ax.set_ylabel('Y Label')
     #ax.set_zlabel('Z Label')
     #plt.show()
-    
+   
     # 2D HISTOGRAM
     nbins = 200
     H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
     Hmasked = np.ma.masked_where(H==0,H)
-    #fig2 = plt.figure()
     plt.subplot(2,1,1)
     plt.pcolormesh(xedges,yedges,Hmasked)
     plt.xlabel('x')
@@ -130,7 +146,7 @@ if __name__ == '__main__':
     plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
-
+ 
     plt.show()
     
 
