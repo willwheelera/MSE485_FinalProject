@@ -27,7 +27,7 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
 sigma_default = 0.5 
-steps_default = 4000
+steps_default = 20000
 
 bond_distance = 1.0
 WF = GTF.H2Molecule(2.0)
@@ -92,9 +92,9 @@ def Etot(L):
     return Eavg
     
 #define the initial bracket of variable 
-(low,high)=(0.5,3.5)   # guess a reasonale range
-E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
-print E_L.x
+#(low,high)=(0.5,3.5)   # guess a reasonale range
+#E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
+#print E_L.x
 
 #############################################################
 # RUN SIMULATIONS
