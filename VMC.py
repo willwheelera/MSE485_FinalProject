@@ -147,7 +147,7 @@ if __name__ == '__main__':
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
  
-    plt.show()
+    #plt.show()
     
 
 

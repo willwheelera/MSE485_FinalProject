@@ -49,8 +49,9 @@ def IonPotentialEnergy(ion_positions,ion_charges):
        S = np.repeat([ion_positions[i,:]],len(ion_positions)-i-1,axis=0)
        ion_displacements = S - ion_positions[i+1:,:] # only calculate distances to ions not already counted
        ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
-       C = np.repeat([ion_charges[i]],len(ion_charges)-i-1,axis=0)
-       Z1Z2 = np.outer(C,ion_positions[i+1:]).diagonal()
+       #C = np.repeat([ion_charges[i]],len(ion_charges)-i-1,axis=0)
+       #Z1Z2 = np.outer(C,ion_charges[i+1:]).diagonal()    #the diagonal of charge array is the Z1*Z2
+       Z1Z2= ion_charges[i]*ion_charges[i+1:]
        V_ion += np.sum(1.0*Z1Z2/ion_distances) * q_e2k                                                        
     return V_ion
 
