@@ -47,10 +47,11 @@ def IonPotentialEnergy(ion_positions,ion_charges):
     V_ion=0.0
     for i in range(0,len(ion_positions)):
        S = np.repeat([ion_positions[i,:]],len(ion_positions)-i-1,axis=0)
-       ion_displacements = S - ion_positions[i+1:,:] # only calculate distances to e- not already counted
+       ion_displacements = S - ion_positions[i+1:,:] # only calculate distances to ions not already counted
        ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
-       C = np.repeat([ion_charges[i]],len(ion_charges)-i-1,axis=0)
-       Z1Z2 = np.outer(C,ion_positions[i+1:]).diagonal()
+       #C = np.repeat([ion_charges[i]],len(ion_charges)-i-1,axis=0)
+       #Z1Z2 = np.outer(C,ion_charges[i+1:]).diagonal()    #the diagonal of charge array is the Z1*Z2
+       Z1Z2= ion_charges[i]*ion_charges[i+1:]
        V_ion += np.sum(1.0*Z1Z2/ion_distances) * q_e2k                                                        
     return V_ion
 
@@ -69,7 +70,9 @@ class WaveFunctionClass:
     Bee_anti = 1.0 # ?
     Cen = ion_charges # Nucleus cusp condition, Drummonds et al
     Den = 1.0
-    
+    # step size for finite difference
+    h=0.001
+
     def setAtomicWavefunctions(self, wfnArray):
         self.psi_array = wfnArray
    
@@ -167,7 +170,26 @@ class WaveFunctionClass:
                 allSlaterMats[i,i,:] = deriv_mat[i,:]
                 dets[i] = LA.det(allSlaterMats[i,:,:])
             localKineticEnergy = np.sum(dets) / psi_at_rvec
-    
+        
+	#Central Finite difference method to get laplacian
+        e_positionsxPlusH=e_positions.copy()
+	e_positionsyPlusH=e_positions.copy()
+	e_positionszPlusH=e_positions.copy()
+	e_positionsxMinusH=e_positions.copy()
+	e_positionsyMinusH=e_positions.copy()
+	e_positionszMinusH=e_positions.copy()
+	
+	FDKineticEnergy = 0.0
+	for i in range(0,N):	    
+	    e_positionsxPlusH[i,0]+=self.h
+	    e_positionsyPlusH[i,1]+=self.h
+	    e_positionszPlusH[i,2]+=self.h
+	    e_positionsxMinusH[i,0]+=-1.0*self.h
+	    e_positionsyMinusH[i,1]+=-1.0*self.h
+	    e_positionszMinusH[i,2]+=-1.0*self.h
+	    
+	    FDKineticEnergy+=(-6.0*self.PsiManyBody(e_positions)+self.PsiManyBody(e_positionsxPlusH)+self.PsiManyBody(e_positionsyPlusH)+self.PsiManyBody(e_positionszPlusH)+self.PsiManyBody(e_positionsxMinusH)+self.PsiManyBody(e_positionsyMinusH)+self.PsiManyBody(e_positionszMinusH))/self.h*self.h
+
         # POTENTIAL TERM
         q_e2k = GSF.q_e**2 * GSF.k_e
         V_ion = 0
@@ -185,7 +207,8 @@ class WaveFunctionClass:
             e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
             V_e += np.sum(1.0/e_distances) * q_e2k                                                        
             
-        return V_ion + V_e + localKineticEnergy
+        #return V_ion + V_e + localKineticEnergy
+	return V_ion + V_e + FDKineticEnergy
 
 
 # SLATER DETERMINANT    
