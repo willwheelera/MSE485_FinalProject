@@ -85,7 +85,8 @@ class WaveFunctionClass:
         self.Cen = charges
     
     def InitializeElectrons(self):
-        e_positions = self.ion_positions + np.random.randn(self.N,3) * GSF.a_B # generate array of electron positions
+        #e_positions = self.ion_positions + np.random.randn(self.N,3) * GSF.a_B # generate array of electron positions
+        e_positions = self.ion_positions + np.ones((self.N,3)) * GSF.a_B *(-4) # generate array of electron positions
         return e_positions
 
     def setNup(self, num):
