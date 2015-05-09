@@ -71,7 +71,7 @@ class WaveFunctionClass:
     Den = 1.0
     # step size for finite difference
     h=0.001
-
+    
     def setAtomicWavefunctions(self, wfnArray):
         self.psi_array = wfnArray
    

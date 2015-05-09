@@ -5,8 +5,12 @@ import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
+<<<<<<< HEAD
 from scipy import optimize
 from mpl_toolkits.mplot3d import Axes3D
+=======
+#from scipy import optimize
+>>>>>>> c7a508e29edebeabcf27f384f962162dc53682a1
 
 def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
@@ -98,7 +102,6 @@ def Etot(L):
 #print E_L.x
 
 
-
 # This allows variables to be set via command line arguments
 # Arguments must be passed in the form 'varname',value
 # args is just sys.argv
@@ -148,15 +151,15 @@ if __name__ == '__main__':
     plt.show()
    
     # 2D HISTOGRAM
-    #nbins = 200
-    #H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
-    #Hmasked = np.ma.masked_where(H==0,H)
-    #plt.subplot(2,1,1)
-    #plt.pcolormesh(xedges,yedges,Hmasked)
-    #plt.xlabel('x')
-    #plt.ylabel('y')
-    #cbar = plt.colorbar()
-    #cbar.ax.set_ylabel('Counts of Psi')
+    nbins = 200
+    H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
+    Hmasked = np.ma.masked_where(H==0,H)
+    plt.subplot(2,1,1)
+    plt.pcolormesh(xedges,yedges,Hmasked.T) # documentation says it switches axes, need to transpose
+    plt.xlabel('x')
+    plt.ylabel('y')
+    cbar = plt.colorbar()
+    cbar.ax.set_ylabel('Counts of Psi')
 
     # TODO plot average energy
     # ENERGY TRACE
