@@ -6,6 +6,7 @@ import GenerateStartingFunctions as GSF
 import timing
 import sys
 from scipy import optimize
+from mpl_toolkits.mplot3d import Axes3D
 
 def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
@@ -29,7 +30,7 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
 steps_default = 20000
 
-bond_distance = 1.0
+bond_distance = 10
 WF = GTF.H2Molecule(bond_distance)
 
 def MC_loop(steps=1000, sig=0.5):
@@ -106,7 +107,8 @@ if __name__ == '__main__':
     
     if len(sys.argv) > 1:
         steps_input = int(sys.argv[1])
-    #for i in range(1,20):       # loop over different sigma to find minimum
+    #for i in range(8,20):       # loop over different sigma to find minimum
+    #WF = GTF.H2Molecule(i*0.1)
     collection_of_positions, E = MC_loop(steps_input,sigma_default)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
     Eavg = np.average(E)
@@ -122,33 +124,33 @@ if __name__ == '__main__':
     z = collection_of_positions[:,2]
     
     ### 3D SCATTER PLOT
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111, projection='3d')
-    #ax.scatter(x, y, z, marker=".")#, zs)
-    #ax.set_xlabel('X Label')
-    #ax.set_ylabel('Y Label')
-    #ax.set_zlabel('Z Label')
-    #plt.show()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(x, y, z, marker=".")#, zs)
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+    plt.show()
    
     # 2D HISTOGRAM
-    nbins = 200
-    H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
-    Hmasked = np.ma.masked_where(H==0,H)
-    plt.subplot(2,1,1)
-    plt.pcolormesh(xedges,yedges,Hmasked)
-    plt.xlabel('x')
-    plt.ylabel('y')
-    cbar = plt.colorbar()
-    cbar.ax.set_ylabel('Counts of Psi')
+    #nbins = 200
+    #H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
+    #Hmasked = np.ma.masked_where(H==0,H)
+    #plt.subplot(2,1,1)
+    #plt.pcolormesh(xedges,yedges,Hmasked)
+    #plt.xlabel('x')
+    #plt.ylabel('y')
+    #cbar = plt.colorbar()
+    #cbar.ax.set_ylabel('Counts of Psi')
 
     # TODO plot average energy
     # ENERGY TRACE
     plt.subplot(2,1,2)
     plt.plot(E)
     #add a horizontal line of Eavg
-    plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
-    plt.xlabel('Monte Carlo steps')
-    plt.ylabel('Energy')
+    #plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
+    #plt.xlabel('Monte Carlo steps')
+    #plt.ylabel('Energy')
  
     plt.show()
     
