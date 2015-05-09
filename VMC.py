@@ -162,12 +162,6 @@ if __name__ == '__main__':
     plt.subplot(2,1,2)
     plt.plot(E)
     #add a horizontal line of Eavg
-<<<<<<< HEAD
-    #plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
-    #plt.xlabel('Monte Carlo steps')
-    #plt.ylabel('Energy')
- 
-=======
     plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
@@ -176,7 +170,6 @@ if __name__ == '__main__':
     #plt.plot(x[0::4]*4,color='y')
     #plt.axhline(y=np.mean(x[0::4])*4,xmin=0,xmax=len(E),color='g')
     
->>>>>>> 398aea3b4c9fe1ddfe71cf2579e844bbdd6baa8e
     plt.show()
     
 
