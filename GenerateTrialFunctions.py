@@ -137,7 +137,7 @@ class WaveFunctionClass:
                 # all the distances are to other down electrons
                 Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
         
-        return np.exp(Uee - Uen)
+        return np.exp(-(Uee - Uen))
 
     ##########################################
     # LOCAL ENERGY
@@ -194,7 +194,7 @@ class WaveFunctionClass:
             
             
                 FDKineticEnergy += (-6.0*psi(e_positions) + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_posyMinusH) + psi(e_poszMinusH))/(self.h*self.h)
-            localKineticEnergy = FDKineticEnergy
+            localKineticEnergy = FDKineticEnergy / psi_at_rvec
 
         
         # POTENTIAL TERM
@@ -215,35 +215,6 @@ class WaveFunctionClass:
         #return V_ion + V_e + localKineticEnergy
 	return V_ion + V_e + localKineticEnergy
 
-def LocalKE(e_positions):
-    # KINETIC TERM
-    # We can compute all of the kinetic energy terms given the positions
-    # This might be hard to debug...
-    # Apparently LA.det will compute determinants of all matrices stacked along dimension 2 at once
-    # I am not sure this is any faster... but less for loops :)
-     
-    deriv_mat = SlaterMatrix(e_positions, self.ion_positions, self.psi_laplacian) # the slater matrix of the laplacians
-    N = len(e_positions) # 
-     
-    allSlaterMats = np.repeat([SlaterMatrix(e_positions, self.ion_positions, self.psi_array)],N,axis=0) # copy this matrix N times along dimension 0
-     
-    if np.version.version > '1.8':
-        for i in range(N):
-            # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
-            allSlaterMats[i,i,:] = deriv_mat[i,:]
-            # First index: slice
-            # Second index: matrix row (which position)
-            # Third index: matrix column (which wavefunction)
-     
-        localKineticEnergy = np.sum(LA.det(allSlaterMats)) / psi_at_rvec # add together the determinants of each derivative matrix
-    else:
-        dets = np.zeros(N)
-        for i in range(N):
-             # set the "diagonal rows" of this NxNxN matrix to be the second derivatives
-            allSlaterMats[i,i,:] = deriv_mat[i,:]
-            dets[i] = LA.det(allSlaterMats[i,:,:])
-        localKineticEnergy = np.sum(dets) / psi_at_rvec 
-    return localKineticEnergy
 
 def FiniteDifferenceKE(e_positions):
     #Central Finite difference method to get laplacian

@@ -26,13 +26,8 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
-sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
-steps_default = 20000
 
-bond_distance = 1.0
-WF = GTF.H2Molecule(bond_distance)
-
-def MC_loop(steps=1000, sig=0.5):
+def MC_loop(WF, steps=1000, sig=0.5):
     
     sigma = sig * GSF.a_B # scale the move distance by Bohr radius
     moves_accepted = 0.0
@@ -101,13 +96,13 @@ def Etot(L):
 # Arguments must be passed in the form 'varname',value
 # args is just sys.argv
 def parseArgs(args,x):
-    #x = {'numSteps': numSteps, 'separation': separation}
+    #x = {'numSteps': numSteps, 'separation': separation, 'sigma': sigma}
     #print len(args)
     if len(args) > 1:
       for i in range(1, len(args), 2):
         print args[i], args[i+1]
         x[args[i]] = float(args[i+1])
-    return int(x['numSteps']), x['separation']
+    return int(x['numSteps']), x['separation'], x['sigma']
 
 
 #############################################################
@@ -115,15 +110,18 @@ def parseArgs(args,x):
 #############################################################
 
 if __name__ == '__main__':
+    sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
     
-    steps_input = steps_default
+    steps_input = 1000
     separation = 1.0
 
-    x = {'numSteps': steps_input, 'separation': separation}
-    steps_input, separation = parseArgs(sys.argv,x)
-
+    x = {'numSteps': steps_input, 'separation': separation, 'sigma': sigma_default}
+    steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
+    
+    WF = GTF.H2Molecule(bond_distance)
+    
     #for i in range(1,20):       # loop over different sigma to find minimum
-    collection_of_positions, E = MC_loop(steps_input,sigma_default)
+    collection_of_positions, E = MC_loop(WF, steps_input, sigma)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
     Eavg = np.average(E)
     Evar = np.var(E)
@@ -157,6 +155,8 @@ if __name__ == '__main__':
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts of Psi')
 
+    #plt.scatter(x,y,c=u'r',s=10)
+
     # TODO plot average energy
     # ENERGY TRACE
     plt.subplot(2,1,2)
@@ -165,7 +165,11 @@ if __name__ == '__main__':
     plt.axhline(y=Eavg,xmin=0,xmax=len(E),color='r')
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
- 
+    
+    # plot x
+    #plt.plot(x[0::4]*4,color='y')
+    #plt.axhline(y=np.mean(x[0::4])*4,xmin=0,xmax=len(E),color='g')
+    
     plt.show()
     
 
