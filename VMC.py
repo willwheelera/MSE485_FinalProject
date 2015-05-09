@@ -26,11 +26,11 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
-sigma_default = 0.5    # TODO do we need to optimize these to have good acceptance rate?
-steps_default = 5000
+sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
+steps_default = 20000
 
 bond_distance = 1.0
-WF = GTF.H2Molecule(2.0)
+WF = GTF.H2Molecule(bond_distance)
 
 def MC_loop(steps=1000, sig=0.5):
     
@@ -106,7 +106,8 @@ if __name__ == '__main__':
     
     if len(sys.argv) > 1:
         steps_input = int(sys.argv[1])
-    collection_of_positions, E = MC_loop(steps_input)
+    #for i in range(1,20):       # loop over different sigma to find minimum
+    collection_of_positions, E = MC_loop(steps_input,sigma_default)
     Eion= GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
     Eavg=np.average(E)
     print 'Avg Energy: '+str(Eavg+Eion)
@@ -147,7 +148,7 @@ if __name__ == '__main__':
     plt.xlabel('Monte Carlo steps')
     plt.ylabel('Energy')
  
-    #plt.show()
+    plt.show()
     
 
 
