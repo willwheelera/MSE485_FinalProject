@@ -96,6 +96,21 @@ def Etot(L):
 #E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
 #print E_L.x
 
+
+
+# This allows variables to be set via command line arguments
+# Arguments must be passed in the form 'varname',value
+# args is just sys.argv
+def parseArgs(args,x):
+    #x = {'numSteps': numSteps, 'separation': separation}
+    #print len(args)
+    if len(args) > 1:
+      for i in range(1, len(args), 2):
+        print args[i], args[i+1]
+        x[args[i]] = float(args[i+1])
+    return int(x['numSteps']), x['separation']
+
+
 #############################################################
 # RUN SIMULATIONS
 #############################################################
@@ -103,9 +118,11 @@ def Etot(L):
 if __name__ == '__main__':
     
     steps_input = steps_default
-    
-    if len(sys.argv) > 1:
-        steps_input = int(sys.argv[1])
+    separation = 1.0
+
+    x = {'numSteps': steps_input, 'separation': separation}
+    steps_input, separation = parseArgs(sys.argv,x)
+
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(steps_input,sigma_default)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
