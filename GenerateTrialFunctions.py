@@ -20,7 +20,7 @@ def HydrogenAtom():
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
 
-    print 'Simulating HydrogenAtom'
+    #print 'Simulating HydrogenAtom'
     return wf
 
 
@@ -39,15 +39,14 @@ def H2Molecule(ion_sep):
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
     
-    print 'Simulating H2Molecule'
+    #print 'Simulating H2Molecule'
     return wf
 
 def IonPotentialEnergy(ion_positions,ion_charges):
     q_e2k = GSF.q_e**2 * GSF.k_e 
     V_ion=0.0
     for i in range(0,len(ion_positions)):
-       S = np.repeat([ion_positions[i,:]],len(ion_positions)-i-1,axis=0)
-       ion_displacements = S - ion_positions[i+1:,:] # only calculate distances to ions not already counted
+       ion_displacements = ion_positions[i+1:] - ion_positions[i]  # only calculate distances to ions not already counted
        ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
        #C = np.repeat([ion_charges[i]],len(ion_charges)-i-1,axis=0)
        #Z1Z2 = np.outer(C,ion_charges[i+1:]).diagonal()    #the diagonal of charge array is the Z1*Z2
@@ -171,45 +170,51 @@ class WaveFunctionClass:
                 dets[i] = LA.det(allSlaterMats[i,:,:])
             localKineticEnergy = np.sum(dets) / psi_at_rvec
         
-	#Central Finite difference method to get laplacian
-        e_positionsxPlusH=e_positions.copy()
-	e_positionsyPlusH=e_positions.copy()
-	e_positionszPlusH=e_positions.copy()
-	e_positionsxMinusH=e_positions.copy()
-	e_positionsyMinusH=e_positions.copy()
-	e_positionszMinusH=e_positions.copy()
-	
-	FDKineticEnergy = 0.0
-	for i in range(0,N):	    
-	    e_positionsxPlusH[i,0]+=self.h
-	    e_positionsyPlusH[i,1]+=self.h
-	    e_positionszPlusH[i,2]+=self.h
-	    e_positionsxMinusH[i,0]+=-1.0*self.h
-	    e_positionsyMinusH[i,1]+=-1.0*self.h
-	    e_positionszMinusH[i,2]+=-1.0*self.h
-	    
-	    FDKineticEnergy+=(-6.0*self.PsiManyBody(e_positions)+self.PsiManyBody(e_positionsxPlusH)+self.PsiManyBody(e_positionsyPlusH)+self.PsiManyBody(e_positionszPlusH)+self.PsiManyBody(e_positionsxMinusH)+self.PsiManyBody(e_positionsyMinusH)+self.PsiManyBody(e_positionszMinusH))/self.h*self.h
 
+
+
+        
         # POTENTIAL TERM
         q_e2k = GSF.q_e**2 * GSF.k_e
         V_ion = 0
         V_e = 0
         for i in range(N):
             # electron-ion terms
-            S = np.repeat([e_positions[i,:]],N,axis=0)
-            ion_displacements = S - self.ion_positions
+            ion_displacements = e_positions[i] - self.ion_positions
             ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
             V_ion += -np.sum(self.ion_charges/ion_distances) * q_e2k
             
             # electron-electron terms
-            S = np.repeat([e_positions[i,:]],len(e_positions)-i-1,axis=0)
-            e_displacements = S - e_positions[i+1:,:] # only calculate distances to e- not already counted
+            e_displacements = e_positions[i] - e_positions[i+1:] # only calculate distances to e- not already counted
             e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
             V_e += np.sum(1.0/e_distances) * q_e2k                                                        
             
         #return V_ion + V_e + localKineticEnergy
-	return V_ion + V_e + FDKineticEnergy
+	return V_ion + V_e + localKineticEnergy
 
+def FiniteDifferenceKE(e_positions):
+   #Central Finite difference method to get laplacian
+        e_posxPlusH = e_positions.copy()
+        e_posyPlusH = e_positions.copy()
+        e_poszPlusH = e_positions.copy()
+        e_posxMinusH = e_positions.copy()
+        e_posyMinusH = e_positions.copy()
+        e_poszMinusH = e_positions.copy()
+        
+        psi = self.PsiManyBody
+        FDKineticEnergy = 0.0
+        for i in range(0,N):
+            e_posxPlusH[i,0] += self.h
+            e_posyPlusH[i,1] += self.h
+            e_poszPlusH[i,2] += self.h
+            e_posxMinusH[i,0] += -1.0*self.h
+            e_posyMinusH[i,1] += -1.0*self.h
+            e_poszMinusH[i,2] += -1.0*self.h
+        
+
+            FDKineticEnergy += (-6.0*psi(e_positions) + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_po    syMinusH) + psi(e_poszMinusH))/(self.h*self.h) 
+
+    return FDKineticEnergy
 
 # SLATER DETERMINANT    
 def SlaterMatrix(e_positions,ion_positions,fn_array):

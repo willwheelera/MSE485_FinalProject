@@ -71,7 +71,7 @@ def MC_loop(steps=1000, sig=0.5):
             index += 2
         
         E[t] = WF.LocalEnergy(e_positions, Psi)
-        printtime = 5000
+        printtime = 1000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
