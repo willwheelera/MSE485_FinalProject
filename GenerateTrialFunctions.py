@@ -70,7 +70,7 @@ class WaveFunctionClass:
     Cen = ion_charges # Nucleus cusp condition, Drummonds et al
     Den = 1.0
     # step size for finite difference
-    h=0.001
+    h=0.00001
     
     def setAtomicWavefunctions(self, wfnArray):
         self.psi_array = wfnArray
@@ -108,8 +108,8 @@ class WaveFunctionClass:
         else:
             slater_det_down = 1
 
-        return slater_det_up * slater_det_down * self.Jastrow(e_positions)
-    
+        return slater_det_up * slater_det_down #* self.Jastrow(e_positions)
+
     def Jastrow(self, e_positions):
         Uen = 0
         Uee = 0
@@ -148,8 +148,8 @@ class WaveFunctionClass:
         # Apparently LA.det will compute determinants of all matrices stacked along dimension 2 at once
         # I am not sure this is any faster... but less for loops :)
         
-        useAnalytic = False
-        KE = 0
+        useAnalytic = False 
+        KE = 0 
         N = len(e_positions) # 
         
         if useAnalytic:
@@ -191,9 +191,8 @@ class WaveFunctionClass:
                 e_posxMinusH[i,0] += -1.0*self.h
                 e_posyMinusH[i,1] += -1.0*self.h
                 e_poszMinusH[i,2] += -1.0*self.h
-            
-            
-                FDKineticEnergy += (-6.0*psi(e_positions) + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_posyMinusH) + psi(e_poszMinusH))/(self.h*self.h)
+                FDKineticEnergy +=0.5*(-6.0*psi(e_positions) + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_posyMinusH) + psi(e_poszMinusH))/((self.h*self.h)
+	    
             localKineticEnergy = FDKineticEnergy
 
         
@@ -212,7 +211,6 @@ class WaveFunctionClass:
             e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
             V_e += np.sum(1.0/e_distances) * q_e2k                                                        
             
-        #return V_ion + V_e + localKineticEnergy
 	return V_ion + V_e + localKineticEnergy
 
 def LocalKE(e_positions):
@@ -264,7 +262,7 @@ def FiniteDifferenceKE(e_positions):
         e_posyMinusH[i,1] += -1.0*self.h
         e_poszMinusH[i,2] += -1.0*self.h
     
-        FDKineticEnergy += (-6.0*psi(e_positions) + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_posyMinusH) + psi(e_poszMinusH))/(self.h*self.h) 
+        FDKineticEnergy += 0.5*(-6.0*psi(e_positions) + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_posyMinusH) + psi(e_poszMinusH))/(self.h*self.h)*psi(e_positions) 
 
     return FDKineticEnergy
 

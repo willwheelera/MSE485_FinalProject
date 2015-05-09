@@ -5,12 +5,7 @@ import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
-<<<<<<< HEAD
-from scipy import optimize
-from mpl_toolkits.mplot3d import Axes3D
-=======
 #from scipy import optimize
->>>>>>> c7a508e29edebeabcf27f384f962162dc53682a1
 
 def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
@@ -34,9 +29,9 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
 steps_default = 20000
 
-bond_distance = 10
-WF = GTF.H2Molecule(bond_distance)
-
+bond_distance = 1.4
+#WF = GTF.H2Molecule(bond_distance)
+WF = GTF.HydrogenAtom()
 def MC_loop(steps=1000, sig=0.5):
     
     sigma = sig * GSF.a_B # scale the move distance by Bohr radius
@@ -126,7 +121,8 @@ if __name__ == '__main__':
 
     x = {'numSteps': steps_input, 'separation': separation}
     steps_input, separation = parseArgs(sys.argv,x)
-
+    
+    #WF.Bee_same=0.4
     collection_of_positions, E = MC_loop(steps_input,sigma_default)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
     Eavg = np.average(E)
@@ -142,13 +138,13 @@ if __name__ == '__main__':
     z = collection_of_positions[:,2]
     
     ### 3D SCATTER PLOT
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(x, y, z, marker=".")#, zs)
-    ax.set_xlabel('X Label')
-    ax.set_ylabel('Y Label')
-    ax.set_zlabel('Z Label')
-    plt.show()
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111, projection='3d')
+    #ax.scatter(x, y, z, marker=".")#, zs)
+    #ax.set_xlabel('X Label')
+    #ax.set_ylabel('Y Label')
+    #ax.set_zlabel('Z Label')
+    #plt.show()
    
     # 2D HISTOGRAM
     nbins = 200
