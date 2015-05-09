@@ -148,12 +148,12 @@ class WaveFunctionClass:
         # Apparently LA.det will compute determinants of all matrices stacked along dimension 2 at once
         # I am not sure this is any faster... but less for loops :)
         
-        useAnalytic = True
+        useAnalytic = False
         KE = 0
+        N = len(e_positions) # 
         
         if useAnalytic:
             deriv_mat = SlaterMatrix(e_positions, self.ion_positions, self.psi_laplacian) # the slater matrix of the laplacians
-            N = len(e_positions) # 
             
             allSlaterMats = np.repeat([SlaterMatrix(e_positions, self.ion_positions, self.psi_array)],N,axis=0) # copy this matrix N times along dimension 0
                 

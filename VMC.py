@@ -108,9 +108,11 @@ if __name__ == '__main__':
         steps_input = int(sys.argv[1])
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(steps_input,sigma_default)
-    Eion= GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
-    Eavg=np.average(E)
+    Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
+    Eavg = np.average(E)
+    Evar = np.var(E)
     print 'Avg Energy: '+str(Eavg+Eion)
+    print 'Var Energy: '+str(Evar)
 #############################################################
 # PLOT POSITIONS
 #############################################################
