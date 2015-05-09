@@ -5,7 +5,7 @@ import GenerateTrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
-from scipy import optimize
+#from scipy import optimize
 
 def UpdatePosition(R,i,sigma): #move the electron at the i'th position
     R_update = R.copy()
@@ -92,9 +92,9 @@ def Etot(L):
     return Eavg
     
 #define the initial bracket of variable 
-(low,high)=(0.5,3.5)   # guess a reasonale range
-E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
-print E_L.x
+#(low,high)=(0.5,3.5)   # guess a reasonale range
+#E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
+#print E_L.x
 
 #############################################################
 # RUN SIMULATIONS
@@ -132,7 +132,7 @@ if __name__ == '__main__':
     H, xedges, yedges = np.histogram2d(x,y,bins=nbins)
     Hmasked = np.ma.masked_where(H==0,H)
     plt.subplot(2,1,1)
-    plt.pcolormesh(xedges,yedges,Hmasked)
+    plt.pcolormesh(xedges,yedges,Hmasked.T) # documentation says it switches axes, need to transpose
     plt.xlabel('x')
     plt.ylabel('y')
     cbar = plt.colorbar()

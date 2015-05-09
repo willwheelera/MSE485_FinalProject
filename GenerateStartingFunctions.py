@@ -16,7 +16,7 @@ a_B = 1.0 #* hbar*hbar / (k_e*m_e*q_e**2) # Bohr radius
 
 # Define atom positions
 ion_positions = np.zeros((2,3))
-ion_sep = 2.0
+ion_sep = 1.0
 R1 = np.array([-0.5*ion_sep,0,0])*a_B
 R2 = np.array([0.5*ion_sep,0,0])*a_B
 ion_positions[0,:] = R1
