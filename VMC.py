@@ -26,11 +26,11 @@ def ForceBiasMove(wf,e_positions,i,sigma):
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
 #############################################################
-sigma_default = 0.5 
-steps_default = 4000
+sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
+steps_default = 20000
 
 bond_distance = 1.0
-WF = GTF.H2Molecule(2.0)
+WF = GTF.H2Molecule(bond_distance)
 
 def MC_loop(steps=1000, sig=0.5):
     
@@ -71,7 +71,7 @@ def MC_loop(steps=1000, sig=0.5):
             index += 2
         
         E[t] = WF.LocalEnergy(e_positions, Psi)
-        printtime = 5000
+        printtime = 1000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
     print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
@@ -96,20 +96,39 @@ def Etot(L):
 #E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
 #print E_L.x
 
+
+# This allows variables to be set via command line arguments
+# Arguments must be passed in the form 'varname',value
+# args is just sys.argv
+def parseArgs(args,x):
+    #x = {'numSteps': numSteps, 'separation': separation}
+    #print len(args)
+    if len(args) > 1:
+      for i in range(1, len(args), 2):
+        print args[i], args[i+1]
+        x[args[i]] = float(args[i+1])
+    return int(x['numSteps']), x['separation']
+
+
 #############################################################
 # RUN SIMULATIONS
 #############################################################
 
 if __name__ == '__main__':
     
-    steps_input = 1000
-    
-    if len(sys.argv) > 1:
-        steps_input = int(sys.argv[1])
-    collection_of_positions, E = MC_loop(steps_input)
- 
-    Eavg=np.average(E)
-    print 'Avg Energy: '+str(Eavg)
+    steps_input = steps_default
+    separation = 1.0
+
+    x = {'numSteps': steps_input, 'separation': separation}
+    steps_input, separation = parseArgs(sys.argv,x)
+
+    #for i in range(1,20):       # loop over different sigma to find minimum
+    collection_of_positions, E = MC_loop(steps_input,sigma_default)
+    Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
+    Eavg = np.average(E)
+    Evar = np.var(E)
+    print 'Avg Energy: '+str(Eavg+Eion)
+    print 'Var Energy: '+str(Evar)
 #############################################################
 # PLOT POSITIONS
 #############################################################
