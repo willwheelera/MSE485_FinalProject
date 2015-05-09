@@ -92,9 +92,11 @@ def Etot(L):
     return Eavg
     
 #define the initial bracket of variable 
+"""
 (low,high)=(0.5,3.5)   # guess a reasonale range
 E_L=optimize.minimize_scalar(Etot,method='Golden',bounds=(low,high))
 print E_L.x
+"""
 
 #############################################################
 # RUN SIMULATIONS
