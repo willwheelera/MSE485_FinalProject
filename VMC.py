@@ -102,6 +102,7 @@ def parseArgs(args,x):
       for i in range(1, len(args), 2):
         print args[i], args[i+1]
         x[args[i]] = float(args[i+1])
+    print x 
     return int(x['numSteps']), x['separation'], x['sigma']
 
 
@@ -119,6 +120,7 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
     
     WF = GTF.H2Molecule(bond_distance)
+    print 'N_electrons:',WF.N_e
     
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
@@ -170,7 +172,7 @@ if __name__ == '__main__':
     #plt.plot(x[0::4]*4,color='y')
     #plt.axhline(y=np.mean(x[0::4])*4,xmin=0,xmax=len(E),color='g')
     
-    plt.show()
+    #plt.show()
     
 
 
