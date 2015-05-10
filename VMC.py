@@ -119,7 +119,8 @@ if __name__ == '__main__':
     x = {'numSteps': steps_input, 'separation': separation, 'sigma': sigma_default}
     steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
     
-    WF = GTF.H2Molecule(bond_distance)
+    #WF = GTF.H2Molecule(bond_distance, N_e=1)
+    WF = GTF.H2Molecule(bond_distance, N_e=2)
     print 'N_electrons:',WF.N_e
     
     #for i in range(1,20):       # loop over different sigma to find minimum
@@ -172,7 +173,7 @@ if __name__ == '__main__':
     #plt.plot(x[0::4]*4,color='y')
     #plt.axhline(y=np.mean(x[0::4])*4,xmin=0,xmax=len(E),color='g')
     
-    #plt.show()
+    plt.show()
     
 
 
