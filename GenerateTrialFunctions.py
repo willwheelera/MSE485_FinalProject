@@ -42,6 +42,31 @@ def H2Molecule(ion_sep):
     #print 'Simulating H2Molecule'
     return wf
 
+def H2OMolecule(bond_length,bond_angle):
+    # bond_length is in atomic units of Bohr radius
+    xdisp = np.cos(bond_angle)*bond_length * GSF.a_B
+    ydisp = np.sin(bond_angle)*bond_length * GSF.a_B
+    
+    O_atom = GSF.O_Atom(np.array([0,0,0]))
+    H_atom1 = GSF.H_Atom(np.array([-xdisp, ydisp, 0]))
+    H_atom2 = GSF.H_Atom(np.array([xdisp, ydisp, 0]))
+    
+    psi_array = np.array([H_atom1.psi_1s, H_atom2.psi_1s, O_atom.psi_1s, O_atom.psi_2s, O_atom.psi_2px, O_atom.psi_2py, O_atom.psi_2pz])
+    #psi_laplacian = np.array([GSF.Lpsi_1s, GSF.Lpsi_1s])
+    psi_laplacian = []
+    
+    N_e = 10
+
+    wf = WaveFunctionClass()
+    wf.setAtomicWavefunctions(psi_array)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setIonPositions(ion_positions)
+    wf.setIonCharges(ion_charges)
+    wf.setNumElectrons(N_e)
+
+    #print 'Simulating H2OMolecule'
+    return wf
+
 def IonPotentialEnergy(ion_positions,ion_charges):
     q_e2k = GSF.q_e**2 * GSF.k_e 
     V_ion=0.0
@@ -60,7 +85,8 @@ class WaveFunctionClass:
     psi_laplacian = [] # GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
     ion_positions = [] # GSF.ion_positions
     ion_charges = [] # GSF.ion_charges  
-    N = len(ion_positions)
+    N_ion = len(ion_positions)
+    N_e = 1
     N_up = 0
     # Jastrow parameters
     Aee_same = 0.25 # parallel cusp condition, Drummonds et al
@@ -80,15 +106,18 @@ class WaveFunctionClass:
 
     def setIonPositions(self, pos):
         self.ion_positions = pos
-        self.N = len(pos)
+        self.N_ion = len(pos)
     
     def setIonCharges(self, charges):
         self.ion_charges = charges
         self.Cen = charges
+
+    def setNumElectrons(self, num):
+        self.N_e = num
     
-    def InitializeElectrons(self):
+    def InitializeElectrons(self,N = N_e):
         #e_positions = self.ion_positions + np.random.randn(self.N,3) * GSF.a_B # generate array of electron positions
-        e_positions = self.ion_positions + np.ones((self.N,3)) * GSF.a_B *(-4) # generate array of electron positions
+        e_positions = self.ion_positions + np.ones((N,3)) * GSF.a_B *(-4) # generate array of electron positions
         return e_positions
 
     def setNup(self, num):
@@ -102,7 +131,7 @@ class WaveFunctionClass:
             slater_det_up = SlaterDeterminant(slater_matrix_up)
         else:
             slater_det_up = 1
-        if N_up < self.N:
+        if N_up < self.N_e:
             slater_matrix_down = SlaterMatrix(e_positions[N_up:], self.ion_positions[N_up:], self.psi_array[N_up:])
             slater_det_down = SlaterDeterminant(slater_matrix_down)
         else:
