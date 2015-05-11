@@ -237,11 +237,21 @@ class WaveFunctionClass:
         return self.slater_det_up * self.slater_det_down * self.Jastrow()
 
     def QuickPsi(self, i, dr):
+        rnew = self.e_positions[i] + dr
         # This should return an approximate value for psi,
         # where ONLY electron i is moved a SMALL amount dr
         # This meets finite difference halfway with partial analysis to save time
         # TODO write the function
-    
+        u = np.zeros(self.N_up+self.N_down)                                                                                                 
+        u[i]=1.0    # u = [0...1...0] ith electron
+        if i < self.N_up:    # if the electron i to be updated is spin up 
+            v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
+        else: # if electron i is spin down
+            v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
+	return ratio
+
     def Jastrow(self):
         Uen = 0
         Uee = 0
