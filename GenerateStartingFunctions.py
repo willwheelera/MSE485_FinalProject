@@ -120,12 +120,13 @@ class H_atom:
   def psi_1s(self, e_pos_vec):
     return Y00 * R10(e_pos_vec - self.i_pos, self.Z)
 
-class O_atom:
-  Z = 8.0
+class Atom:
+  Z = 1.0
   i_pos = np.zeros(3)
 
-  def __init__(self, pos=np.array([0,0,0])):
+  def __init__(self, pos=np.array([0,0,0]), Z=1.0):
     self.i_pos = pos
+    self.Z = Z
 
   last_e_vec = np.zeros(3)
   last_2p_vec = np.zeros(3)
