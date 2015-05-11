@@ -110,6 +110,7 @@ class WaveFunctionClass:
     Aee_anti = 0.5 # anti-parallel cusp condition, Drummonds et al
     Bee_same = 1.0 # ?
     Bee_anti = 1.0 # ?
+    J = 0
     # Cen = -1*ion_charges # Nucleus cusp condition, Drummonds et al
     Den = 10.0
     # Slater Matrix and determinant
@@ -117,7 +118,7 @@ class WaveFunctionClass:
     slater_det_up = 0.
     inverse_SD_up = []                      
     slater_matrix_down = []
-    dlater_det_down = 0
+    slater_det_down = 0
     inverse_SD_down = []                        
     # step size for finite difference
     h=0.001
@@ -173,33 +174,35 @@ class WaveFunctionClass:
                 self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]**2,1))
                 self.atom_disp[i,:] = self.e_positions[i] - self.ion_positions
                 self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]**2,1))
- 	    #Once the e_position is initialize, the slater matrix and its deteriminant and inverse are all initialized. 
-	    self.slater_matrix_up=SlaterMatrix(self.e_positions[0:N_up-1],self.psi_up)
-	    self.slater_matrix_down=SlaterMatrix(self.e_positions[N_up-1:],self.psi_down)
-            self.inverse_SD_up = LA.inv(self.slater_matrix_up)
-	    self.inverse_SD_down = LA.inv(self.slater_matrix_down) 
-            self.slater_det_up = LA.det(self.slater_matrix_up)			
-	    self.slater_det_down = LA.det(self.slater_matrix_down)
-	    return self.e_positions
+ 	      #Once the e_position is initialize, the slater matrix and its deteriminant and inverse are all initialized. 
+        self.slater_matrix_up=SlaterMatrix(self.e_positions[0:N_up-1],self.psi_up)
+        self.slater_matrix_down=SlaterMatrix(self.e_positions[N_up-1:],self.psi_down)
+        self.inverse_SD_up = LA.inv(self.slater_matrix_up)
+        self.inverse_SD_down = LA.inv(self.slater_matrix_down) 
+        self.slater_det_up = LA.det(self.slater_matrix_up)			
+        self.slater_det_down = LA.det(self.slater_matrix_down)
+        J = self.Jastrow()
+    return self.e_positions
 
     #def setNup(self, num):
     #    self.N_up = num
 
     def UpdatePosition(self, i, rnew): # function to update position of one electron and the corresponding distances
        	# update the inverse of determinant matrix
-	u = np.zeros(self.N_up+self.N_down)
-	u[i]=1.0    # u = [0...1...0] ith electron
-	if i < self.N_up:    # if the electron i to be updated is spin up 
-	    v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
-            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
-	    # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
-	    self.inverse_SD_up = self.inverse_SD_up - np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
-	else: # if electron i is spin down
-	    v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
-  	    ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
-            self.inverse_SD_down = self.inverse_SD_down - np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
-	
-	self.e_positions[i] = rnew
+	      u = np.zeros(self.N_up+self.N_down)
+	      u[i]=1.0    # u = [0...1...0] ith electron
+	      if i < self.N_up:    # if the electron i to be updated is spin up 
+	          v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
+                ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
+	          # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
+	          self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
+	      else: # if electron i is spin down
+	          v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
+              ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
+                  self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
+	      
+        Ji_before = Jastrow_i(i)
+	      self.e_positions[i] = rnew
         self.e_disp[i,i+1:] = rnew - self.e_positions[i+1:]
         self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]*self.e_disp[i,i+1:],1))
         self.e_disp[:i,i] = self.e_positions[:i] - rnew # displacements of earlier electrons
@@ -207,6 +210,9 @@ class WaveFunctionClass:
         self.atom_disp[i,:] = rnew - self.ion_positions
         self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]*self.atom_disp[i,:],1))
 	
+        Ji_after = Jastrow_i(i)
+        self.J += Ji_after - Ji_before
+
 	# update slater matrix
         if i < self.N_up:
             for j in range(self.N_up):
@@ -272,6 +278,51 @@ class WaveFunctionClass:
                 Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
         """
         return np.exp(-(Uee + Uen))
+
+    def Jastrow_i(self,i,):
+        # compute Jastrow terms with electron i
+        # update electron-ion energy term
+        
+        Uen = np.sum(self.Cen*self.atom_dist[i]/(1+self.Den*self.atom_dist[i]))
+        # Compute electron distances from electron i (only further in the list - count each p    air once)
+        Uee = 0
+        if i < N_up: # if this electron is spin up
+            e_same = np.hstack(self.e_dist[:i,i], self.e_dist[i,i+1:N_up], # electrons [i+1:N_up]
+            e_anti = self.e_dist[i,N_up:]
+            Uee += np.sum(self.Aee_same*e_same/(1+self.Bee_same*e_same))
+            Uee += np.sum(self.Aee_anti*e_anti/(1+self.Bee_anti*e_anti))
+        else: # if this electron is spin down
+            # all the distances are to other down electrons
+            Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
+
+        return Uen + Uee
+
+    def JastrowDiff(self,i,dr):
+        # approximates the difference in Jastrow factor for incrementing electron i by vector dr
+        currentJ = Jastrow_i(i)
+        
+        a_new = self.atom_dist[i] + np.sum(self.atom_disp[i]*dr,1)/self.atom_dist[i]
+        Uen = np.sum(self.Cen*a_new/(1+self.Den*a_new))
+        # Compute electron distances from electron i (only further in the list - count each p        air once)
+        Uee = 0
+        if i < N_up: # if this electron is spin up
+            e_same1 = self.e_dist[:i,i] # for earler electrons
+            e_same2 = self.e_dist[i,i+1:N_up] # for later electrons [i+1:N_up]
+            e_anti = self.e_dist[i,N_up:]
+            # update: r_new = r_old + (disp_old * dr_vec)/r_old
+            e_same_new1 = e_same1 + np.sum(e_disp[:i,i]*dr,1)/e_same1
+            e_same_new2 = e_same2 + np.sum(e_disp[i,i+1:N_up]*dr,1)/e_same2
+            e_anti_new = e_anti + np.sum(e_disp[i,N_up:]*dr,1)/e_anti
+
+            Uee += np.sum(self.Aee_same*e_same_new1/(1+self.Bee_same*e_same_new1))
+            Uee += np.sum(self.Aee_same*e_same_new2/(1+self.Bee_same*e_same_new2))
+            Uee += np.sum(self.Aee_anti*e_anti_new/(1+self.Bee_anti*e_anti_new))
+        else: # if this electron is spin down
+            # all the distances are to other down electrons
+            Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
+
+        return Uee + Uen - currentJ
+
 
     ##########################################
     # LOCAL ENERGY
