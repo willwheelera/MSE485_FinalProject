@@ -12,32 +12,61 @@ KEprefactor  = -GSF.hbar**2 * 0.5/GSF.m_e
 q_e2k = GSF.q_e**2 * GSF.k_e
 
 def HydrogenAtom():
-    psi_array = np.array([GSF.psi_1s])
-    psi_laplacian = np.array([GSF.Lpsi_1s])
-    ion_positions = np.array([[0.0,0.0,0.0]])*GSF.a_B
-    ion_charges = np.array([1.0])
-
+    H_atom = GSF.Atom(pos=np.array([0,0,0],Z=1.0))
+    psi_array = np.array([H_atom.psi_1s])
+    psi_laplacian = []
+    ion_positions = np.array([H_atom.i_pos])
+    ion_charges = np.array([H_atom.Z]) 
+    N_e = 1
+    
     wf = WaveFunctionClass()
-    wf.setAtomicWavefunctions(psi_array)
+    wf.setUpWavefunctions(psi_array)
+    wf.setDownWavefunctions(psi_array)
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
-
+    wf.setNumElectrons(N_e) 
+    # Up or down doesn't matter for 1 electron; note the default is 0 in the class
+    wf.N_up = 1
     #print 'Simulating HydrogenAtom'
     return wf
 
+def HeliumAtom():
+    He_atom = GSF.Atom(pos=np.array([0,0,0],Z=2.0))
+    psi_laplacian = [] 
+    psi_array = np.array([He_atom.psi_1s])
+    ion_positions = np.array([He_atom.i_pos])
+    ion_charges = np.array([He_atom.Z])
+    N_e = 2
+    wf = WaveFunctionClass()
+    wf.setUpWavefunctions(psi_array)
+    wf.setDownWavefunctions(psi_array)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setIonPositions(ion_positions)
+    wf.setIonCharges(ion_charges)
+    wf.setNumElectrons(N_e)              
+    # set 1 up and 1 down for electrons
+    wf.N_up = 1
+    wf.N_down = 1
+    return wf
 
-def H2Molecule(ion_sep, N_e=2):
-    # ion_sep is in atomic units of Bohr radius
-    psi_array = np.array([GSF.psi_1s, GSF.psi_1s])
-    psi_laplacian = np.array([GSF.Lpsi_1s, GSF.Lpsi_1s])
+def H2Molecule(ion_sep):
+    # ion_sep is in atomic units of Bohr radius 
     ion_positions = np.array([
         [-0.5*ion_sep, 0, 0],
         [0.5*ion_sep, 0, 0]]) * GSF.a_B
-    ion_charges = np.array([1.0, 1.0]) # just Z number
-    
+    H1_atom = GSF.Atom(pos=np.array(ion_positions[0],Z=1.0))
+    H2_atom = GSF.Atom(pos=np.array(ion_positions[1],Z=1.0))
+    psi_laplacian = []
+    # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
+    # using 1:1 and up for both for now  
+    psi_array = np.array([H1_atom.psi_1s],[H2_atom.psi_1s])
+
+    ion_positions = np.array([H1_atom.i_pos],[H2_atom.i_pos])
+    N_e = 2
+
     wf = WaveFunctionClass()
-    wf.setAtomicWavefunctions(psi_array)
+    wf.setUpWavefunctions(psi_array)
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
@@ -70,7 +99,7 @@ def H2OMolecule(bond_length,bond_angle):
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e)
+    wf.setNumElectrons(N_e)              
 
     #print 'Simulating H2OMolecule'
     return wf
@@ -119,8 +148,6 @@ class WaveFunctionClass:
     inverse_SD_up = []                      
     slater_matrix_down = []
     slater_det_down = 0
-    inverse_SD_down = []                        
-    # step size for finite difference
     h=0.001
 
     def setAtomList(self, atoms):
@@ -142,18 +169,16 @@ class WaveFunctionClass:
     def setNumDown(self, num): # should not be necessary
         self.N_down = num
 
-    """
-    def setAtomicLaplacians(self, lapArray): # This function won't be used
+    def setAtomicLaplacians(self, lapArray): 
         self.psi_laplacian = lapArray
 
-    def setIonPositions(self, pos): # won't be used - the atoms have positions now
+    def setIonPositions(self, pos): 
         self.ion_positions = pos
         self.N_ion = len(pos)
     
-    def setIonCharges(self, charges): # won't be used - the atoms have charges now
+    def setIonCharges(self, charges): 
         self.ion_charges = charges
         self.Cen = -1*charges
-    """
     
     def InitializeElectrons(self):
         if self.N_up == 0 and self.N_down == 0:
@@ -214,16 +239,16 @@ class WaveFunctionClass:
         self.J += Ji_after - Ji_before
 
 	# update slater matrix
-        if i < self.N_up:
-            for j in range(self.N_up):
-                self.slater_matrix_up[i,j] = self.psi_up[j](rnew)
-            # TODO update determinant
-        else:
-            for j in range(self.N_down):
-                self.slater_matrix_down[i-self.N_up,j] = self.psi_down[j](rnew)
-            # TODO update determinant
-	
-	return ratio*ratio
+        #if i < self.N_up:
+        #    for j in range(self.N_up):
+        #        self.slater_matrix_up[i,j] = self.psi_up[j](rnew)
+        #    # TODO update determinant
+        #else:
+        #    for j in range(self.N_down):
+        #        self.slater_matrix_down[i-self.N_up,j] = self.psi_down[j](rnew)
+        #    # TODO update determinant
+        #
+        #return ratio*ratio
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self):
@@ -243,11 +268,21 @@ class WaveFunctionClass:
         return self.slater_det_up * self.slater_det_down * self.Jastrow()
 
     def QuickPsi(self, i, dr):
+        rnew = self.e_positions[i] + dr
         # This should return an approximate value for psi,
         # where ONLY electron i is moved a SMALL amount dr
         # This meets finite difference halfway with partial analysis to save time
         # TODO write the function
-    
+        u = np.zeros(self.N_up+self.N_down)                                                                                                 
+        u[i]=1.0    # u = [0...1...0] ith electron
+        if i < self.N_up:    # if the electron i to be updated is spin up 
+            v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
+        else: # if electron i is spin down
+            v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
+	return ratio
+
     def Jastrow(self):
         Uen = 0
         Uee = 0
