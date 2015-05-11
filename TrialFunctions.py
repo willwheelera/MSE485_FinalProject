@@ -51,14 +51,18 @@ def H2OMolecule(bond_length,bond_angle):
     xdisp = np.cos(bond_angle)*bond_length * GSF.a_B
     ydisp = np.sin(bond_angle)*bond_length * GSF.a_B
     
-    O_atom = GSF.O_Atom(np.array([0,0,0]))
-    H_atom1 = GSF.H_Atom(np.array([-xdisp, ydisp, 0]))
-    H_atom2 = GSF.H_Atom(np.array([xdisp, ydisp, 0]))
+    O_atom = GSF.Atom(pos=np.array([0,0,0],Z=8.0))
+    H_atom1 = GSF.Atom(pos=np.array([-xdisp, ydisp, 0]), Z=1.0)
+    H_atom2 = GSF.Atom(pos=np.array([xdisp, ydisp, 0]), Z=1.0)
     
+    # for each electron, need to have wavefn, atom position and atomic number
+    # TODO not in scalable form
     psi_array = np.array([H_atom1.psi_1s, H_atom2.psi_1s, O_atom.psi_1s, O_atom.psi_2s, O_atom.psi_2px, O_atom.psi_2py, O_atom.psi_2pz])
     #psi_laplacian = np.array([GSF.Lpsi_1s, GSF.Lpsi_1s])
     psi_laplacian = []
     
+    ion_positions = np.array([H_atom1.i_pos, H_atom2.i_pos, O_atom.i_pos, O_atom.i_pos, O_atom.i_pos, O_atom.i_pos, O_atom.i_pos])
+    ion_charges = np.array([H_atom1.Z, H_atom2.Z, O_atom.Z, O_atom.Z, O_atom.Z, O_atom.Z, O_atom.Z])
     N_e = 10
 
     wf = WaveFunctionClass()
@@ -86,8 +90,8 @@ class WaveFunctionClass:
     # An atomic orbital is assigned to each electron.
 
     # Define the atomic wavefunctions
-    psi_array = [] # GSF.getH2Functions()  #generate array of objective basis states
-    psi_laplacian = [] # GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
+    #psi_array = [] # GSF.getH2Functions()  #generate array of objective basis states
+    #psi_laplacian = [] # GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
     ion_positions = [] # GSF.ion_positions
     ion_charges = [] # GSF.ion_charges  
     N_ion = len(ion_positions)
@@ -95,8 +99,8 @@ class WaveFunctionClass:
     N_up = 0
     N_down = 0
     e_positions = np.seros((1,3)) # use single electron list for now
-    e_pos_up = np.zeros((1,3)) # maybe the up list will be useful later
-    e_pos_down = np.zeros((1,3)) # maybe the down list will be useful later
+    #e_pos_up = np.zeros((1,3)) # maybe the up list will be useful later
+    #e_pos_down = np.zeros((1,3)) # maybe the down list will be useful later
     # There is a list of orbitals for the up electrons and another for down
     atom_list = []
     psi_up = []
@@ -230,7 +234,7 @@ class WaveFunctionClass:
         else:
             slater_det_down = 1
         """
-        return self.slater_det_up * self.slater_det_down * self.Jastrow(e_positions)
+        return self.slater_det_up * self.slater_det_down * self.Jastrow()
 
     def QuickPsi(self, i, dr):
         # This should return an approximate value for psi,
@@ -314,12 +318,6 @@ class WaveFunctionClass:
           #  e_posxMinusH = e_positions.copy()
           #  e_posyMinusH = e_positions.copy()
           #  e_poszMinusH = e_positions.copy()
-            e_plusx = e_positions.copy()
-            e_plusy = e_positions.copy()
-            e_plusz = e_positions.copy()
-            e_minusx = e_positions.copy()
-            e_minusy = e_positions.copy()
-            e_minusz = e_positions.copy()
             psi = self.QuickPsi
             FDKineticEnergy = 0.0
             for i in range(0,N):

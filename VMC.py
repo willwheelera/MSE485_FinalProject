@@ -7,11 +7,11 @@ import timing
 import sys
 #from scipy import optimize
 
-def UpdatePosition(R,i,sigma): #move the electron at the i'th position
-    R_update = R.copy()
+def MetropolisMove(R,i,sigma): #move the electron at the i'th position
+    # R_update = R.copy()
     dr = np.random.randn(3)*sigma
-    R_update[i,:] = R_update[i,:] + dr
-    return(R_update, 1.0) # return new_position, T_ratio
+    #R_update[i,:] = R_update[i,:] + dr
+    return(dr, 1.0) # return new_position, T_ratio
 # TODO: is copying the whole array less efficient than the version in the HW?
 
 # TODO finish  Force-bias moves
@@ -21,7 +21,7 @@ def ForceBiasMove(wf,e_positions,i,sigma):
     # calculate T ratio
     new_positions = e_positions.copy() # TODO
     T_ratio = 1.0 # TODO
-    return new_positions, T_ratio # TODO: is copying whole arrays less efficient than in HW?
+    return dr, T_ratio # TODO: is copying whole arrays less efficient than in HW?
 
 #############################################################
 # STARTING MAIN LOOP FOR VQMC
@@ -37,7 +37,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
     N = len(e_positions)
     collection_of_positions = np.zeros((2*N*steps,3))
     
-    Psi = WF.PsiManyBody(e_positions)
+    Psi = WF.PsiManyBody()
     prob_old = Psi**2
     print('initial prob: ', prob_old)
     E = np.zeros(steps)
@@ -46,26 +46,27 @@ def MC_loop(WF, steps=1000, sig=0.5):
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
             
-            e_positions_new, T_ratio = UpdatePosition(e_positions,i,sigma) #generate array of new electron poisitons
+            e_positions_new, T_ratio = MetropolisMove(e_positions,i,sigma) #generate array of new electron poisitons
             
-            Psi_new =  WF.PsiManyBody(e_positions_new)
-            prob_new = Psi_new**2 #get modulus^2 of new wave function
-            ratio = prob_new/prob_old #take the ratio of the squares
+            prob_ratio = WF.UpdatePosition(i,e_position_new) # returns the probability ratio
+            Psi_new =  WF.PsiManyBody()
+            #prob_new = Psi_new**2 #get modulus^2 of new wave function
+            #ratio = prob_new/prob_old #take the ratio of the squares
 
             ## A = min(1,ratio) # Acceptance crtierion - this is automatically satisfied in our probability checking
-            A = ratio
+            A = prob_ratio
 
             ran = np.random.random()
             if A > ran:
-                e_positions = e_positions_new
+                #e_positions = e_positions_new
                 moves_accepted += 1.0
-                prob_old = prob_new
-                Psi = Psi_new
+                #prob_old = prob_new
+                #Psi = Psi_new
 
-            collection_of_positions[index:index+2,:] = e_positions
+            collection_of_positions[index:index+2,:] = WF.e_positions
             index += 2
         
-        E[t] = WF.LocalEnergy(e_positions, Psi)
+        E[t] = WF.LocalEnergy(Psi)
         printtime = 1000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
