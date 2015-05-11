@@ -83,14 +83,24 @@ def IonPotentialEnergy(ion_positions,ion_charges):
     return V_ion
 
 class WaveFunctionClass:
+    # An atomic orbital is assigned to each electron.
+
     # Define the atomic wavefunctions
     psi_array = [] # GSF.getH2Functions()  #generate array of objective basis states
     psi_laplacian = [] # GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
     ion_positions = [] # GSF.ion_positions
     ion_charges = [] # GSF.ion_charges  
     N_ion = len(ion_positions)
-    N_e = 1
-    N_up = 1
+    # TODO remove N_e = 1
+    N_up = 0
+    N_down = 0
+    e_positions = np.seros((1,3)) # use single electron list for now
+    e_pos_up = np.zeros((1,3)) # maybe the up list will be useful later
+    e_pos_down = np.zeros((1,3)) # maybe the down list will be useful later
+    # There is a list of orbitals for the up electrons and another for down
+    atom_list = []
+    psi_up = []
+    psi_down = []
     # Jastrow parameters
     Aee_same = 0.25 # parallel cusp condition, Drummonds et al
     Aee_anti = 0.5 # anti-parallel cusp condition, Drummonds et al
@@ -98,66 +108,128 @@ class WaveFunctionClass:
     Bee_anti = 1.0 # ?
     # Cen = -1*ion_charges # Nucleus cusp condition, Drummonds et al
     Den = 10.0
+    # Slater Matrix and determinant
+    slater_matrix_up = []
+    slater_det_up = 0
+    slater_matrix_down = []
+    dlater_det_down = 0
     # step size for finite difference
-    h=0.00001
-    
-    def setAtomicWavefunctions(self, wfnArray):
-        self.psi_array = wfnArray
-   
-    def setAtomicLaplacians(self, lapArray):
+    h=0.001
+
+    def setAtomList(self, atoms):
+        self.atom_list = atoms
+        for i in range(len(atoms)):
+            self.ion_positions[i] = atoms[i].i_pos
+
+    def setUpWavefunctions(self, wfnArray):
+        self.psi_up = wfnArray
+        self.N_up = len(wfnArray)
+
+    def setDownWavefunctions(self, wfnArray):
+        self.psi_down = wfnArray
+        self.N_down = len(wfnArray)
+
+    def setNumUp(self, num): # should not be necessary
+        self.N_up = num 
+
+    def setNumDown(self, num): # should not be necessary
+        self.N_down = num
+
+    """
+    def setAtomicLaplacians(self, lapArray): # This function won't be used
         self.psi_laplacian = lapArray
 
-    def setIonPositions(self, pos):
+    def setIonPositions(self, pos): # won't be used - the atoms have positions now
         self.ion_positions = pos
         self.N_ion = len(pos)
     
-    def setIonCharges(self, charges):
+    def setIonCharges(self, charges): # won't be used - the atoms have charges now
         self.ion_charges = charges
         self.Cen = -1*charges
-
-    def setNumElectrons(self, num): # currently implemented in InitializeElectrons
-        self.N_e = num
+    """
     
-    def InitializeElectrons(self,N = N_e):
-        #e_positions = self.ion_positions + np.random.randn(self.N,3) * GSF.a_B # generate array of electron positions
-        # TODO error catch
-        self.N_e = N
-        e_positions = self.ion_positions + np.ones((N,3)) * GSF.a_B *(-4) # generate array of electron positions
-        return e_positions
+    def InitializeElectrons(self):
+        if self.N_up == 0 and self.N_down == 0:
+            print 'Error: no electrons to initialize'
+            return []
+        else:
+            # generate array of electron positions, normally distributed from the origin with Bohr radius
+            self.e_positions = np.random.randn((N_up+N_down),3)) * GSF.a_B # generate array of electron positions
+            n = self.N_up+self.N_down
+            # Store displacements and distances
+            self.e_disp = np.zeros((n,n,3)) # store the displacements in a 3D matrix to make indexing easier
+            self.e_dist = np.zeros((n,n)) # the electron matrices should only be upper diagonal
+            self.atom_disp = np.zeros((n,len(self.atom_list),3))
+            self.atom_dist = np.zeros((n,len(self.atom_list)))
+            index = 0
+            for i in range(n):
+                self.e_disp[i,i+1:] = self.e_positions[i] - self.e_positions[i+1:]
+                self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]**2,1))
+                self.atom_disp[i,:] = self.e_positions[i] - self.ion_positions
+                self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]**2,1))
+ 
+            return self.e_positions
 
-    def setNup(self, num):
-        self.N_up = num
+    #def setNup(self, num):
+    #    self.N_up = num
+
+    def UpdatePosition(self, i, rnew): # function to update position of one electron and the corresponding distances
+        self.e_positions[i] = rnew
+        self.e_disp[i,i+1:] = rnew - self.e_positions[i+1:]
+        self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]*self.e_disp[i,i+1:],1))
+        self.e_disp[:i,i] = self.e_positions[:i] - rnew # displacements of earlier electrons
+        self.e_dist[:i,i] = np.sqrt(np.sum(self.e_disp[:i,i]*self.e_disp[:i,i],1)) # distances of earlier electrons
+        self.atom_disp[i,:] = rnew - self.ion_positions
+        self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]*self.atom_disp[i,:],1))
+        # update slater matrix
+        if i < self.N_up:
+            for j in range(self.N_up):
+                self.slater_matrix_up[i,j] = self.psi_up[j](rnew)
+            # TODO update determinant
+        else:
+            for j in range(self.N_down):
+                self.slater_matrix_down[i-self.N_up,j] = self.psi_down[j](rnew)
+            # TODO update determinant
 
     # MANY-BODY WAVEFUNCTION
-    def PsiManyBody(self, e_positions):
+    def PsiManyBody(self):
+        """
         N_up = self.N_up
         if N_up > 0:
-            slater_matrix_up = SlaterMatrix(e_positions[0:N_up], self.ion_positions[0:N_up], self.psi_array[0:N_up])
+            slater_matrix_up = SlaterMatrix(self.e_positions[0:N_up], self.psi_up)
             slater_det_up = SlaterDeterminant(slater_matrix_up)
         else:
             slater_det_up = 1
-        if N_up < self.N_e:
-            slater_matrix_down = SlaterMatrix(e_positions[N_up:], self.ion_positions[N_up:], self.psi_array[N_up:])
+        if N_down > 0:
+            slater_matrix_down = SlaterMatrix(self.e_positions[N_up:], self.psi_down)
             slater_det_down = SlaterDeterminant(slater_matrix_down)
         else:
             slater_det_down = 1
+        """
+        return self.slater_det_up * self.slater_det_down * self.Jastrow(e_positions)
 
-        return slater_det_up * slater_det_down #* self.Jastrow(e_positions)
-
-    def Jastrow(self, e_positions):
+    def QuickPsi(self, i, dr):
+        # This should return an approximate value for psi,
+        # where ONLY electron i is moved a SMALL amount dr
+        # This meets finite difference halfway with partial analysis to save time
+        # TODO write the function
+    
+    def Jastrow(self):
         Uen = 0
         Uee = 0
         N_up = self.N_up
+        
+        Uen = np.sum(self.Cen * self.atom_dist / (1+self.Den*self.atom_dist))
+        Uee_up_same = np.sum(self.Aee_same * self.e_dist[:N_up,:N_up] / (1+self.Bee_same * self.e_dist[:N_up,:N_up]))
+        Uee_down_same = np.sum(self.Aee_same * self.e_dist[N_up:,N_up:] / (1+self.Bee_same * self.e_dist[N_up:,N_up:]))
+        Uee_anti = np.sum(self.Aee_anti * self.e_dist[:N_up,N_up:] / (1+self.Bee_anti * self.e_dist[:N_up,N_up:]))
+        Uee = Uee_up_same + Uee_down_same + Uee_anti
+        """
         for i in range(len(e_positions)):
             # Compute ion distances from electron i
-            ion_disp = self.ion_positions - e_positions[i]
-            ion_dist = np.sqrt(np.sum(ion_disp*ion_disp, axis=1))
-            #print 'ion_dist',ion_dist
-            #print 'Cen',self.Cen
-            #print 'numerator',self.Cen*ion_dist
-            #print 'denominator',(1+self.Den*ion_dist)
             # update electron-ion energy term
-            en_sum = np.sum(self.Cen*ion_dist/(1+self.Den*ion_dist))
+            
+            en_sum = np.sum(self.Cen*self.atom_dist[i]/(1+self.Den*self.atom_dist[i]))
             Uen += en_sum
             # Compute electron distances from electron i (only further in the list - count each pair once)
             e_disp = e_positions[i+1:] - e_positions[i]
@@ -170,23 +242,25 @@ class WaveFunctionClass:
             else: # if this electron is spin down
                 # all the distances are to other down electrons
                 Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
-        
+        """
         return np.exp(-(Uee + Uen))
 
     ##########################################
     # LOCAL ENERGY
-    def LocalEnergy(self, e_positions, psi_at_rvec):
+    def LocalEnergy(self, psi_at_rvec):
         # KINETIC TERM
         # We can compute all of the kinetic energy terms given the positions
         # This might be hard to debug...
         # Apparently LA.det will compute determinants of all matrices stacked along dimension 2 at once
         # I am not sure this is any faster... but less for loops :)
         
-        useAnalytic = False 
-        KE = 0 
+        useAnalytic = False
+        KE = 0
         N = len(e_positions) # 
         
-        if useAnalytic:
+        if useAnalytic: # THIS WILL NOT WORK AT ALL until laplacian matrix and lap Jastrow are also updated
+            KE = 0 # need an indent
+        """
             deriv_mat = SlaterMatrix(e_positions, self.ion_positions, self.psi_laplacian) # the slater matrix of the laplacians
             
             allSlaterMats = np.repeat([SlaterMatrix(e_positions, self.ion_positions, self.psi_array)],N,axis=0) # copy this matrix N times along dimension 0
@@ -207,49 +281,64 @@ class WaveFunctionClass:
                     allSlaterMats[i,i,:] = deriv_mat[i,:]
                     dets[i] = LA.det(allSlaterMats[i,:,:])
                 localKineticEnergy = np.sum(dets) / psi_at_rvec
+        """
         else:
             #Central Finite difference method to get laplacian
-            e_posxPlusH = e_positions.copy()
-            e_posyPlusH = e_positions.copy()
-            e_poszPlusH = e_positions.copy()
-            e_posxMinusH = e_positions.copy()
-            e_posyMinusH = e_positions.copy()
-            e_poszMinusH = e_positions.copy()
-            
-            psi = self.PsiManyBody
+          #  e_posxPlusH = e_positions.copy()
+          #  e_posyPlusH = e_positions.copy()
+          #  e_poszPlusH = e_positions.copy()
+          #  e_posxMinusH = e_positions.copy()
+          #  e_posyMinusH = e_positions.copy()
+          #  e_poszMinusH = e_positions.copy()
+            e_plusx = e_positions.copy()
+            e_plusy = e_positions.copy()
+            e_plusz = e_positions.copy()
+            e_minusx = e_positions.copy()
+            e_minusy = e_positions.copy()
+            e_minusz = e_positions.copy()
+            psi = self.QuickPsi
             FDKineticEnergy = 0.0
             for i in range(0,N):
-                e_posxPlusH[i,0] += self.h
-                e_posyPlusH[i,1] += self.h
-                e_poszPlusH[i,2] += self.h
-                e_posxMinusH[i,0] += -1.0*self.h
-                e_posyMinusH[i,1] += -1.0*self.h
-                e_poszMinusH[i,2] += -1.0*self.h
+                #e_posxPlusH[i,0] += self.h
+                #e_posyPlusH[i,1] += self.h
+                #e_poszPlusH[i,2] += self.h
+                #e_posxMinusH[i,0] += -1.0*self.h
+                #e_posyMinusH[i,1] += -1.0*self.h
+                #e_poszMinusH[i,2] += -1.0*self.h
+                e_plusx = self.h * np.array([1,0,0])
+                e_plusy = self.h * np.array([0,1,0])
+                e_plusz = self.h * np.array([0,0,1])
+                e_minusx = -1.0*self.h * np.array([1,0,0])
+                e_minusy = -1.0*self.h * np.array([0,1,0])
+                e_minusz = -1.0*self.h * np.array([0,0,1])
             
-            
-                FDKineticEnergy += KEprefactor * (-6.0*psi_at_rvec + psi(e_posxPlusH) + psi(e_posyPlusH) + psi(e_poszPlusH) + psi(e_posxMinusH) + psi(e_posyMinusH) + psi(e_poszMinusH))/(self.h*self.h)
+            # TODO This won't work until QuickPsi is written - maybe better to write DiffPsi for just differences instead
+                FDKineticEnergy += KEprefactor * (-6.0*psi_at_rvec + psi(i,e_plusx) + psi(i,e_plusy) + psi(i,e_plusz) + psi(i,e_minusx) + psi(i,e_minusy) + psi(i,e_minusz) ) /(self.h*self.h)
             localKineticEnergy = FDKineticEnergy / psi_at_rvec
 
         
         # POTENTIAL TERM
         V_ion = 0
         V_e = 0
+
+        V_ion = -np.sum(self.ion_charges * np.sum(1.0/self.atom_dist,axis=0)) * q_e2k
+        V_e = np.sum(1.0/self.e_dist) * q_e2k
+        """
         for i in range(N):
             # electron-ion terms
-            ion_displacements = e_positions[i] - self.ion_positions
-            ion_distances = np.sqrt(np.sum(ion_displacements*ion_displacements,axis=1))
-            V_ion += -np.sum(self.ion_charges/ion_distances) * q_e2k
+            V_ion += -np.sum(self.ion_charges/self.atom_dist) * q_e2k
             
             # electron-electron terms
             e_displacements = e_positions[i] - e_positions[i+1:] # only calculate distances to e- not already counted
             e_distances = np.sqrt(np.sum(e_displacements*e_displacements,axis=1))
             V_e += np.sum(1.0/e_distances) * q_e2k                                                        
-            
+        """
+        #return V_ion + V_e + localKineticEnergy
 	return V_ion + V_e + localKineticEnergy
 
 
 
-# SLATER DETERMINANT    
+# SLATER DETERMINANT - is this still necessary?
 def SlaterMatrix(e_positions,ion_positions,fn_array):
     # fn_array has the basis wavefunctions centered at the origin (shifted to the ion_position passed in as argument)
     slater_matrix = np.zeros((len(e_positions),(len(e_positions))))
