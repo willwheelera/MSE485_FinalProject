@@ -110,9 +110,11 @@ class WaveFunctionClass:
     Den = 10.0
     # Slater Matrix and determinant
     slater_matrix_up = []
-    slater_det_up = 0
+    slater_det_up = 0.
+    inverse_SD_up = []                      
     slater_matrix_down = []
     dlater_det_down = 0
+    inverse_SD_down = []                        
     # step size for finite difference
     h=0.001
 
@@ -167,21 +169,41 @@ class WaveFunctionClass:
                 self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]**2,1))
                 self.atom_disp[i,:] = self.e_positions[i] - self.ion_positions
                 self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]**2,1))
- 
-            return self.e_positions
+ 	    #Once the e_position is initialize, the slater matrix and its deteriminant and inverse are all initialized. 
+	    self.slater_matrix_up=SlaterMatrix(self.e_positions[0:N_up-1],self.psi_up)
+	    self.slater_matrix_down=SlaterMatrix(self.e_positions[N_up-1:],self.psi_down)
+            self.inverse_SD_up = LA.inv(self.slater_matrix_up)
+	    self.inverse_SD_down = LA.inv(self.slater_matrix_down) 
+            self.slater_det_up = LA.det(self.slater_matrix_up)			
+	    self.slater_det_down = LA.det(self.slater_matrix_down)
+	    return self.e_positions
 
     #def setNup(self, num):
     #    self.N_up = num
 
     def UpdatePosition(self, i, rnew): # function to update position of one electron and the corresponding distances
-        self.e_positions[i] = rnew
+       	# update the inverse of determinant matrix
+	u = np.zeros(self.N_up+self.N_down)
+	u[i]=1.0    # u = [0...1...0] ith electron
+	if i < self.N_up:    # if the electron i to be updated is spin up 
+	    v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
+	    # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
+	    self.inverse_SD_up = self.inverse_SD_up - np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
+	else: # if electron i is spin down
+	    v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
+  	    ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
+            self.inverse_SD_down = self.inverse_SD_down - np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
+	
+	self.e_positions[i] = rnew
         self.e_disp[i,i+1:] = rnew - self.e_positions[i+1:]
         self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]*self.e_disp[i,i+1:],1))
         self.e_disp[:i,i] = self.e_positions[:i] - rnew # displacements of earlier electrons
         self.e_dist[:i,i] = np.sqrt(np.sum(self.e_disp[:i,i]*self.e_disp[:i,i],1)) # distances of earlier electrons
         self.atom_disp[i,:] = rnew - self.ion_positions
         self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]*self.atom_disp[i,:],1))
-        # update slater matrix
+	
+	# update slater matrix
         if i < self.N_up:
             for j in range(self.N_up):
                 self.slater_matrix_up[i,j] = self.psi_up[j](rnew)
@@ -190,6 +212,8 @@ class WaveFunctionClass:
             for j in range(self.N_down):
                 self.slater_matrix_down[i-self.N_up,j] = self.psi_down[j](rnew)
             # TODO update determinant
+	
+	return ratio*ratio
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self):
@@ -339,11 +363,11 @@ class WaveFunctionClass:
 
 
 # SLATER DETERMINANT - is this still necessary?
-def SlaterMatrix(e_positions,ion_positions,fn_array):
+def SlaterMatrix(e_positions,fn_array):
     # fn_array has the basis wavefunctions centered at the origin (shifted to the ion_position passed in as argument)
     slater_matrix = np.zeros((len(e_positions),(len(e_positions))))
     for j in range(0, len(fn_array)):
-        slater_matrix[j,:] = fn_array[j](e_positions,ion_positions[j,:])  #build slater matrix
+        slater_matrix[j,:] = fn_array[j](e_positions)  #build slater matrix
     return slater_matrix
 
 def SlaterDeterminant(slater_matrix):
