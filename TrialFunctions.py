@@ -113,7 +113,7 @@ class WaveFunctionClass:
     slater_det_up = 0.
     inverse_SD_up = []                      
     slater_matrix_down = []
-    dlater_det_down = 0
+    dlater_det_down = 0.
     inverse_SD_down = []                        
     # step size for finite difference
     h=0.001
@@ -204,16 +204,16 @@ class WaveFunctionClass:
         self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]*self.atom_disp[i,:],1))
 	
 	# update slater matrix
-        if i < self.N_up:
-            for j in range(self.N_up):
-                self.slater_matrix_up[i,j] = self.psi_up[j](rnew)
-            # TODO update determinant
-        else:
-            for j in range(self.N_down):
-                self.slater_matrix_down[i-self.N_up,j] = self.psi_down[j](rnew)
-            # TODO update determinant
-	
-	return ratio*ratio
+        #if i < self.N_up:
+        #    for j in range(self.N_up):
+        #        self.slater_matrix_up[i,j] = self.psi_up[j](rnew)
+        #    # TODO update determinant
+        #else:
+        #    for j in range(self.N_down):
+        #        self.slater_matrix_down[i-self.N_up,j] = self.psi_down[j](rnew)
+        #    # TODO update determinant
+        #
+        #return ratio*ratio
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self):
