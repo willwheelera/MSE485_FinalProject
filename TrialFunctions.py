@@ -38,6 +38,7 @@ def HeliumAtom():
     ion_positions = np.array([He_atom.i_pos])
     ion_charges = np.array([He_atom.Z])
     N_e = 2
+    
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array)
     wf.setDownWavefunctions(psi_array)
@@ -55,22 +56,22 @@ def H2Molecule(ion_sep):
     ion_positions = np.array([
         [-0.5*ion_sep, 0, 0],
         [0.5*ion_sep, 0, 0]]) * GSF.a_B
-    H1_atom = GSF.Atom(pos=np.array(ion_positions[0],Z=1.0))
-    H2_atom = GSF.Atom(pos=np.array(ion_positions[1],Z=1.0))
+    H1_atom = GSF.Atom(pos=np.array(ion_positions[0]),Z=1.0)
+    H2_atom = GSF.Atom(pos=np.array(ion_positions[1]),Z=1.0)
     psi_laplacian = []
     # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
     # using 1:1 and up for both for now  
-    psi_array = np.array([H1_atom.psi_1s],[H2_atom.psi_1s])
-
-    ion_positions = np.array([H1_atom.i_pos],[H2_atom.i_pos])
-    N_e = 2
-
+    psi_array = np.array([H1_atom.psi_1s,H2_atom.psi_1s])
+    ion_positions = np.array([H1_atom.i_pos,H2_atom.i_pos])
+    ion_charges= np.array([H1_atom.Z,H2_atom.Z])
+    
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array)
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setIonPositions(ion_positions)
     wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e)
+    wf.setNumUp(1)
+    wf.setNumDown(1)
     
     #print 'Simulating H2Molecule'
     return wf
@@ -90,8 +91,8 @@ def H2OMolecule(bond_length,bond_angle):
     #psi_laplacian = np.array([GSF.Lpsi_1s, GSF.Lpsi_1s])
     psi_laplacian = []
     
-    ion_positions = np.array([H_atom1.i_pos, H_atom2.i_pos, O_atom.i_pos, O_atom.i_pos, O_atom.i_pos, O_atom.i_pos, O_atom.i_pos])
-    ion_charges = np.array([H_atom1.Z, H_atom2.Z, O_atom.Z, O_atom.Z, O_atom.Z, O_atom.Z, O_atom.Z])
+    ion_positions = np.array([H_atom1.i_pos, H_atom2.i_pos, O_atom.i_pos])
+    ion_charges = np.array([H_atom1.Z, H_atom2.Z, O_atom.Z])
     N_e = 10
 
     wf = WaveFunctionClass()
@@ -127,7 +128,7 @@ class WaveFunctionClass:
     # TODO remove N_e = 1
     N_up = 0
     N_down = 0
-    e_positions = np.seros((1,3)) # use single electron list for now
+    e_positions = np.zeros((1,3)) # use single electron list for now
     #e_pos_up = np.zeros((1,3)) # maybe the up list will be useful later
     #e_pos_down = np.zeros((1,3)) # maybe the down list will be useful later
     # There is a list of orbitals for the up electrons and another for down
@@ -186,8 +187,10 @@ class WaveFunctionClass:
             return []
         else:
             # generate array of electron positions, normally distributed from the origin with Bohr radius
-            self.e_positions = np.random.randn((N_up+N_down),3)) * GSF.a_B # generate array of electron positions
             n = self.N_up+self.N_down
+            self.e_positions = np.random.randn(n,3) * GSF.a_B # generate array of electron positions
+            print 'e_pos',self.e_positions
+            print 'i_pos',self.ion_positions
             # Store displacements and distances
             self.e_disp = np.zeros((n,n,3)) # store the displacements in a 3D matrix to make indexing easier
             self.e_dist = np.zeros((n,n)) # the electron matrices should only be upper diagonal
@@ -207,27 +210,27 @@ class WaveFunctionClass:
         self.slater_det_up = LA.det(self.slater_matrix_up)			
         self.slater_det_down = LA.det(self.slater_matrix_down)
         J = self.Jastrow()
-    return self.e_positions
+        return self.e_positions
 
     #def setNup(self, num):
     #    self.N_up = num
 
     def UpdatePosition(self, i, rnew): # function to update position of one electron and the corresponding distances
        	# update the inverse of determinant matrix
-	      u = np.zeros(self.N_up+self.N_down)
-	      u[i]=1.0    # u = [0...1...0] ith electron
-	      if i < self.N_up:    # if the electron i to be updated is spin up 
-	          v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
-                ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
+        u = np.zeros(self.N_up+self.N_down)
+        u[i]=1.0    # u = [0...1...0] ith electron
+        if i < self.N_up:    # if the electron i to be updated is spin up 
+            v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
 	          # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
-	          self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
-	      else: # if electron i is spin down
-	          v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
-              ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
-                  self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
+            self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
+        else: # if electron i is spin down
+            v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
+            ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
+            self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
 	      
         Ji_before = Jastrow_i(i)
-	      self.e_positions[i] = rnew
+        self.e_positions[i] = rnew
         self.e_disp[i,i+1:] = rnew - self.e_positions[i+1:]
         self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]*self.e_disp[i,i+1:],1))
         self.e_disp[:i,i] = self.e_positions[:i] - rnew # displacements of earlier electrons
@@ -322,7 +325,7 @@ class WaveFunctionClass:
         # Compute electron distances from electron i (only further in the list - count each p    air once)
         Uee = 0
         if i < N_up: # if this electron is spin up
-            e_same = np.hstack(self.e_dist[:i,i], self.e_dist[i,i+1:N_up], # electrons [i+1:N_up]
+            e_same = np.hstack(self.e_dist[:i,i], self.e_dist[i,i+1:N_up]) # electrons [i+1:N_up]
             e_anti = self.e_dist[i,N_up:]
             Uee += np.sum(self.Aee_same*e_same/(1+self.Bee_same*e_same))
             Uee += np.sum(self.Aee_anti*e_anti/(1+self.Bee_anti*e_anti))
@@ -373,8 +376,8 @@ class WaveFunctionClass:
         N = len(e_positions) # 
         
         if useAnalytic: # THIS WILL NOT WORK AT ALL until laplacian matrix and lap Jastrow are also updated
-            KE = 0 # need an indent
-        """
+            KE = 0 # need an indented line
+            """
             deriv_mat = SlaterMatrix(e_positions, self.ion_positions, self.psi_laplacian) # the slater matrix of the laplacians
             
             allSlaterMats = np.repeat([SlaterMatrix(e_positions, self.ion_positions, self.psi_array)],N,axis=0) # copy this matrix N times along dimension 0
@@ -395,15 +398,15 @@ class WaveFunctionClass:
                     allSlaterMats[i,i,:] = deriv_mat[i,:]
                     dets[i] = LA.det(allSlaterMats[i,:,:])
                 localKineticEnergy = np.sum(dets) / psi_at_rvec
-        """
+            """
         else:
             #Central Finite difference method to get laplacian
-          #  e_posxPlusH = e_positions.copy()
-          #  e_posyPlusH = e_positions.copy()
-          #  e_poszPlusH = e_positions.copy()
-          #  e_posxMinusH = e_positions.copy()
-          #  e_posyMinusH = e_positions.copy()
-          #  e_poszMinusH = e_positions.copy()
+            #  e_posxPlusH = e_positions.copy()
+            #  e_posyPlusH = e_positions.copy()
+            #  e_poszPlusH = e_positions.copy()
+            #  e_posxMinusH = e_positions.copy()
+            #  e_posyMinusH = e_positions.copy()
+            #  e_poszMinusH = e_positions.copy()
             psi = self.QuickPsi
             FDKineticEnergy = 0.0
             for i in range(0,N):

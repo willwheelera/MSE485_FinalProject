@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
-import GenerateTrialFunctions as GTF
+import TrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
@@ -61,7 +61,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
                 #e_positions = e_positions_new
                 moves_accepted += 1.0
                 #prob_old = prob_new
-                #Psi = Psi_new
+                Psi = Psi_new
 
             collection_of_positions[index:index+2,:] = WF.e_positions
             index += 2
@@ -121,8 +121,7 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    WF = GTF.H2Molecule(bond_distance, N_e=2)
-    print 'N_electrons:',WF.N_e
+    WF = GTF.H2Molecule(bond_distance)
     
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
