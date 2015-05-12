@@ -7,10 +7,9 @@ import timing
 import sys
 #from scipy import optimize
 
-def MetropolisMove(R,i,sigma): #move the electron at the i'th position
-    # R_update = R.copy()
-    dr = np.random.randn(3)*sigma
-    #R_update[i,:] = R_update[i,:] + dr
+def MetropolisMove(sigma): #move the electron at the i'th position
+    #dr = np.random.randn(3)*sigma
+    dr = np.array([0,0.5,0])
     return(dr, 1.0) # return new_position, T_ratio
 # TODO: is copying the whole array less efficient than the version in the HW?
 
@@ -46,9 +45,9 @@ def MC_loop(WF, steps=1000, sig=0.5):
     for t in range(0,steps):
         for i in range(0,len(e_positions)):
             
-            e_positions_new, T_ratio = MetropolisMove(e_positions,i,sigma) #generate array of new electron poisitons
-            
-            prob_ratio = WF.UpdatePosition(i,e_position_new) # returns the probability ratio
+            e_move, T_ratio = MetropolisMove(sigma) #generate array of new electron poisitons
+            # e_move is the CHANGE in position
+            prob_ratio = WF.UpdatePosition(i,e_move) # returns the probability ratio
             Psi_new =  WF.PsiManyBody()
             #prob_new = Psi_new**2 #get modulus^2 of new wave function
             #ratio = prob_new/prob_old #take the ratio of the squares
@@ -62,15 +61,17 @@ def MC_loop(WF, steps=1000, sig=0.5):
                 moves_accepted += 1.0
                 #prob_old = prob_new
                 Psi = Psi_new
-
-            collection_of_positions[index:index+2,:] = WF.e_positions
-            index += 2
+            else: # if we reject the move
+                WF.UpdatePosition(i,-1*e_move) # undo the move
+            collection_of_positions[index:index+N,:] = WF.e_positions
+            index += N
         
         E[t] = WF.LocalEnergy(Psi)
         printtime = 1000
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
-    print('Acceptance Rate:',(moves_accepted/(2.0*t))*100.0)
+    print 'Final prob ratio',prob_ratio
+    print('Acceptance Rate:',(moves_accepted/(N*t)))
     
     return collection_of_positions, E
 
