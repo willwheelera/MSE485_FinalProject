@@ -121,7 +121,7 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    WF = GTF.H2Molecule(bond_distance, N_e=2)
+    WF = GTF.H2Molecule(bond_distance)
     print 'N_electrons:',WF.N_e
     
     #for i in range(1,20):       # loop over different sigma to find minimum

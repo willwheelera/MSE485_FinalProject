@@ -218,16 +218,16 @@ class WaveFunctionClass:
 	      u[i]=1.0    # u = [0...1...0] ith electron
 	      if i < self.N_up:    # if the electron i to be updated is spin up 
 	          v = self.psi_up(rnew)-self.psi_up(self.e_positions[i])  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
-                ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
+                  ratio=1.0+np.dot(v,np.dot(self.inverse_SD_up,u))
 	          # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
 	          self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
 	      else: # if electron i is spin down
 	          v = self.psi_down(rnew)-self.psi_down(self.e_positions[i])
-              ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
+                  ratio=1.0+np.dot(v,np.dot(self.inverse_SD_down,u))
                   self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
 	      
         Ji_before = Jastrow_i(i)
-	      self.e_positions[i] = rnew
+	self.e_positions[i] = rnew
         self.e_disp[i,i+1:] = rnew - self.e_positions[i+1:]
         self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]*self.e_disp[i,i+1:],1))
         self.e_disp[:i,i] = self.e_positions[:i] - rnew # displacements of earlier electrons
