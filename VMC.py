@@ -106,7 +106,7 @@ def parseArgs(args,x):
         print args[i], args[i+1]
         x[args[i]] = float(args[i+1])
     print x 
-    return int(x['numSteps']), x['separation'], x['sigma']
+    return int(x['numSteps']), x['separation'], x['sigma'], x['B'], x['D']
 
 
 #############################################################
@@ -118,12 +118,17 @@ if __name__ == '__main__':
     
     steps_input = 1000   
     separation = 1.0
+    jastrowB = 1.0
+    jastrowD = 10.0
 
-    x = {'numSteps': steps_input, 'separation': separation, 'sigma': sigma_default}
-    steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
+    x = {'numSteps': steps_input, 'separation': separation, 'sigma': sigma_default,'B': jastrowB, 'D': jastrowD}
+    steps_input, bond_distance, sigma, jastrowB, jastrowD = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
     WF = GTF.H2Molecule(bond_distance)
+    WF.Bee_same = jastrowB
+    WF.Bee_anti = jastrowB
+    WF.Den = jastrowD
     #WF = GTF.HydrogenAtom()
     #WF = GTF.HeliumAtom()
 

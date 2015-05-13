@@ -53,6 +53,27 @@ def HeliumAtom():
     wf.N_down = 1
     return wf
 
+def LithiumAtom():
+    Li_atom = GSF.Atom(pos=np.array([0,0,0],Z=3.0))
+    psi_laplacian = []
+    psi_array_up = np.array([Li_atom.psi_1s, Li_atom.psi_2s])
+    psi_array_down = np.array([Li_atom.psi_1s])
+    ion_positions = np.array([Li_atom.i_pos])
+    ion_charges = np.array([Li_atom.Z])
+    N_e = 3
+
+    wf = WaveFunctionClass()
+    wf.setUpWavefunctions(psi_array_up)
+    wf.setDownWavefunctions(psi_array_down)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setIonPositions(ion_positions)
+    wf.setIonCharges(ion_charges)
+    wf.setNumElectrons(N_e)
+    # set 1 up and 1 down for electrons
+    wf.setNumUp(len(psi_array_up))
+    wf.setNumDown(len(psi_array_down))
+    return wf
+
 def H2Molecule(ion_sep):
     # ion_sep is in atomic units of Bohr radius 
     ion_positions = np.array([
@@ -71,6 +92,58 @@ def H2Molecule(ion_sep):
     wf.setDownWavefunctions(psi_array_down)
     wf.setAtomicLaplacians(psi_laplacian)
     wf.setAtomList([H_atom1,H_atom2])
+    #wf.setIonPositions(ion_positions)
+    #wf.setIonCharges(ion_charges)
+    wf.setNumUp(len(psi_array_up))
+    wf.setNumDown(len(psi_array_down))
+    
+    #print 'Simulating H2Molecule'
+    return wf
+
+def He2Molecule(ion_sep):
+    # ion_sep is in atomic units of Bohr radius 
+    ion_positions = np.array([
+        [-0.5*ion_sep, 0.0, 0.0],
+        [0.5*ion_sep, 0.0, 0.0]]) * GSF.a_B
+    He_atom1 = GSF.Atom(pos=np.array(ion_positions[0]),Z=2.0)
+    He_atom2 = GSF.Atom(pos=np.array(ion_positions[1]),Z=2.0)
+    psi_laplacian = []
+    # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
+    # using 1:1 and up for both for now  
+    psi_array_up = np.array([He_atom1.psi_1s,He_atom2.psi_1s])
+    psi_array_down = np.array([He_atom1.psi_1s,He_atom2.psi_1s])
+        
+    wf = WaveFunctionClass()
+    wf.setUpWavefunctions(psi_array_up)
+    wf.setDownWavefunctions(psi_array_down)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setAtomList([He_atom1,He_atom2])
+    #wf.setIonPositions(ion_positions)
+    #wf.setIonCharges(ion_charges)
+    wf.setNumUp(len(psi_array_up))
+    wf.setNumDown(len(psi_array_down))
+        
+    #print 'Simulating H2Molecule'
+    return wf
+
+def HFMolecule(ion_sep):
+    # ion_sep is in atomic units of Bohr radius 
+    ion_positions = np.array([
+        [-0.5*ion_sep, 0.0, 0.0],
+        [0.5*ion_sep, 0.0, 0.0]]) * GSF.a_B
+    H_atom = GSF.Atom(pos=np.array(ion_positions[0]),Z=1.0)
+    F_atom = GSF.Atom(pos=np.array(ion_positions[1]),Z=9.0)
+    psi_laplacian = []
+    # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
+    # using 1:1 and up for both for now  
+    psi_array_up = np.array([H_atom.psi_1s, F_atom.psi_1s,  F_atom.psi_2s, F_atom.psi_2py, F_atom.psi_2pz])
+    psi_array_down = np.array([F_atom.psi_1s,  F_atom.psi_2s, F_atom.psi_2px, F_atom.psi_2py, F_atom.psi_2pz])
+    
+    wf = WaveFunctionClass()
+    wf.setUpWavefunctions(psi_array_up)
+    wf.setDownWavefunctions(psi_array_down)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setAtomList([H_atom,F_atom])
     #wf.setIonPositions(ion_positions)
     #wf.setIonCharges(ion_charges)
     wf.setNumUp(len(psi_array_up))
