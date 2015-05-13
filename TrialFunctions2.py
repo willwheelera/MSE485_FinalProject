@@ -85,8 +85,8 @@ def H2Molecule(ion_sep):
     psi_laplacian = []
     # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
     # using 1:1 and up for both for now  
-    psi_array_up = np.array([H_atom1.psi_1s,H_atom2.psi_1s])
-    psi_array_down = np.array([])
+    psi_array_up = np.array([H_atom1.psi_1s])
+    psi_array_down = np.array([H_atom2.psi_1s])
     
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array_up)
@@ -327,7 +327,7 @@ class WaveFunctionClass:
         if self.N_down>0: 
             self.inverse_SD_down = LA.inv(self.slater_matrix_down) 
             self.slater_det_down = LA.det(self.slater_matrix_down)
-        J = self.Jastrow()
+        self.J = self.Jastrow()
         print 'slater_inv',self.inverse_SD_up
         return self.e_positions
 
@@ -354,15 +354,18 @@ class WaveFunctionClass:
                 #print 'SlaterInverse',self.inverse_SD_up, '          ratio',ratio,'cond',np.linalg.cond(self.inverse_SD_up)
             else: # if electron i is spin down
                 u = np.zeros(self.N_down)
-		u[i-self.N_up]=1.0
-		v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
+                u[i-self.N_up]=1.0
+                v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
                 ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
                 self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
                 self.slater_det_down *= ratio
 	      
         ## TODO test code
         if testbool:
-            slater_mat = SlaterMatrix(self.e_positions[:self.N_up],self.psi_up)
+            if i < self.N_up:
+                slater_mat = SlaterMatrix(self.e_positions[:self.N_up],self.psi_up)
+            else:
+                slater_mat = SlaterMatrix(self.e_positions[self.N_up:],self.psi_down)
             old_SD = SlaterDeterminant(slater_mat)
 
         ## end test code
@@ -378,10 +381,16 @@ class WaveFunctionClass:
         
         ## TODO test code
         if testbool:
-            slater_mat = SlaterMatrix(self.e_positions[:self.N_up],self.psi_up)
-            new_SD = SlaterDeterminant(slater_mat)
-            ratio = new_SD / old_SD
-            self.slater_det_up = new_SD
+            if i < self.N_up:
+                slater_mat = SlaterMatrix(self.e_positions[:self.N_up],self.psi_up)
+                new_SD = SlaterDeterminant(slater_mat)
+                ratio = new_SD / old_SD
+                self.slater_det_up = new_SD
+            else:
+                slater_mat = SlaterMatrix(self.e_positions[self.N_up:],self.psi_down)
+                new_SD = SlaterDeterminant(slater_mat)
+                ratio = new_SD / old_SD
+                self.slater_det_down = new_SD
         #print 'ratio',ratio, 'SD',new_SD
         ## end test code
         

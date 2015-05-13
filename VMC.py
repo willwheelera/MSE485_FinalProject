@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
-import TrialFunctions as GTF
+import TrialFunctions2 as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
@@ -137,7 +137,8 @@ if __name__ == '__main__':
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
-    Eavg = np.average(E) + Eion
+    E = E + Eion
+    Eavg = np.average(E) 
     Evar = np.var(E)
     Estd = np.sqrt(Evar)
     Este = Estd/np.sqrt(steps_input)*10.0

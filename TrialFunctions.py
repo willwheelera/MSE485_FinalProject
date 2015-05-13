@@ -70,8 +70,8 @@ def H2Molecule(ion_sep):
     psi_laplacian = []
     # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
     # using 1:1 and up for both for now  
-    psi_array_up = np.array([H_atom1.psi_1s,H_atom2.psi_1s])
-    psi_array_down = np.array([])
+    psi_array_up = np.array([H_atom1.psi_1s])
+    psi_array_down = np.array([H_atom2.psi_1s])
 
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array_up)
@@ -283,7 +283,7 @@ class WaveFunctionClass:
         if self.N_down>0: 
             self.inverse_SD_down = LA.inv(self.slater_matrix_down) 
             self.slater_det_down = LA.det(self.slater_matrix_down)
-        J = self.Jastrow()
+        self.J = self.Jastrow()
         return self.e_positions
 
     #def setNup(self, num):
