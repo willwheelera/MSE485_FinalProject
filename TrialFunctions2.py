@@ -54,21 +54,22 @@ def HeliumAtom():
     return wf
 
 def LithiumAtom():
-    Li_atom = GSF.Atom(pos=np.array([0,0,0],Z=3.0))
+    Li_atom = GSF.Atom(pos=np.array([0,0,0]),Z=3.0)
     psi_laplacian = []
-    psi_array_up = np.array([Li_atom.psi_1s, Li_atom.psi_2s])
+    psi_array_up = np.array([ Li_atom.psi_1s])
     psi_array_down = np.array([Li_atom.psi_1s])
     ion_positions = np.array([Li_atom.i_pos])
     ion_charges = np.array([Li_atom.Z])
-    N_e = 3
+    N_e = 2
 
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array_up)
     wf.setDownWavefunctions(psi_array_down)
     wf.setAtomicLaplacians(psi_laplacian)
-    wf.setIonPositions(ion_positions)
-    wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e)
+    wf.setAtomList([Li_atom]) 
+    #wf.setIonPositions(ion_positions)
+    #wf.setIonCharges(ion_charges)
+    #wf.setNumElectrons(N_e)
     # set 1 up and 1 down for electrons
     wf.setNumUp(len(psi_array_up))
     wf.setNumDown(len(psi_array_down))
