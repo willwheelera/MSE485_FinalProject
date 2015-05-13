@@ -33,7 +33,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
     e_positions = WF.InitializeElectrons()
     e_positions_new = e_positions.copy()
     N = len(e_positions)
-    collection_of_positions = np.zeros((2*N*steps,3))
+    collection_of_positions = np.zeros((N*steps,3))
     
     Psi = WF.PsiManyBody()
     prob_old = Psi**2
@@ -46,7 +46,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
             
             e_move, T_ratio = MetropolisMove(sigma) #generate array of new electron poisitons
             # e_move is the CHANGE in position
-            prob_ratio = WF.UpdatePosition(i,e_move) # returns the probability ratio
+            prob_ratio = WF.UpdatePosition(i,e_move)**2 # returns the probability ratio
             Psi_new =  WF.PsiManyBody()
             #prob_new = Psi_new**2 #get modulus^2 of new wave function
             #ratio = prob_new/prob_old #take the ratio of the squares
@@ -60,10 +60,12 @@ def MC_loop(WF, steps=1000, sig=0.5):
                 moves_accepted += 1.0
                 #prob_old = prob_new
                 Psi = Psi_new
+                #print 'accept',A
             else: # if we reject the move
                 WF.UpdatePosition(i,-1*e_move) # undo the move
-            collection_of_positions[index:index+N,:] = WF.e_positions
-            index += N
+                #print 'REJECT',A
+            collection_of_positions[index] = WF.e_positions[i]
+            index += 1
         
         E[t] = WF.LocalEnergy(Psi)
         printtime = 1000

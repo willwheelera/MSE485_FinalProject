@@ -10,6 +10,8 @@ from numpy import random
 
 KEprefactor  = -GSF.hbar**2 * 0.5/GSF.m_e
 q_e2k = GSF.q_e**2 * GSF.k_e
+    
+testbool = True
 
 def HydrogenAtom():
     H_atom = GSF.Atom(pos=np.array([0,0,0],Z=1.0))
@@ -54,8 +56,8 @@ def HeliumAtom():
 def H2Molecule(ion_sep):
     # ion_sep is in atomic units of Bohr radius 
     ion_positions = np.array([
-        [-0.5*ion_sep, 0, 0],
-        [0.5*ion_sep, 0, 0]]) * GSF.a_B
+        [-0.5*ion_sep, 0.0, 0.0],
+        [0.5*ion_sep, 0.0, 0.0]]) * GSF.a_B
     H_atom1 = GSF.Atom(pos=np.array(ion_positions[0]),Z=1.0)
     H_atom2 = GSF.Atom(pos=np.array(ion_positions[1]),Z=1.0)
     psi_laplacian = []
@@ -63,7 +65,7 @@ def H2Molecule(ion_sep):
     # using 1:1 and up for both for now  
     psi_array_up = np.array([H_atom1.psi_1s,H_atom2.psi_1s])
     psi_array_down = np.array([])
-
+    
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array_up)
     wf.setDownWavefunctions(psi_array_down)
@@ -188,10 +190,10 @@ class WaveFunctionClass:
         self.Cen = -1*charges
    
     def psiDiff(self, fns, rvec):
-        out_list = np.zeros((2,len(fns)))
+        out_list = np.zeros((2,len(fns))) # 0-old, 1-new ; cols are wfns
         for i in range(len(fns)):
-            out_list[i] = fns[i](rvec)
-        return out_list[:,1]-out_list[:,0]
+            out_list[:,i] = fns[i](rvec)
+        return out_list[1]-out_list[0]
      
     def InitializeElectrons(self):
         if self.N_up == 0 and self.N_down == 0:
@@ -216,6 +218,7 @@ class WaveFunctionClass:
  	      #Once the e_position is initialize, the slater matrix and its deteriminant and inverse are all initialized. 
         self.slater_matrix_up = SlaterMatrix(self.e_positions[0:self.N_up],self.psi_up)
         self.slater_matrix_down = SlaterMatrix(self.e_positions[self.N_up:],self.psi_down)
+        print 'slater_matrix',self.slater_matrix_up
         if self.N_up>0: 
             self.inverse_SD_up = LA.inv(self.slater_matrix_up)
             self.slater_det_up = LA.det(self.slater_matrix_up)			
@@ -223,6 +226,7 @@ class WaveFunctionClass:
             self.inverse_SD_down = LA.inv(self.slater_matrix_down) 
             self.slater_det_down = LA.det(self.slater_matrix_down)
         J = self.Jastrow()
+        print 'slater_inv',self.inverse_SD_up
         return self.e_positions
 
     #def setNup(self, num):
@@ -231,24 +235,33 @@ class WaveFunctionClass:
     def UpdatePosition(self, i, dr): 
         # function to update position of one electron and the corresponding distances
        	rnew = self.e_positions[i] + dr
-        # update the inverse of determinant matrix
-        u = np.zeros(self.N_up+self.N_down)
-        u[i]=1.0    # u = [0...1...0] ith electron
-        if i < self.N_up:    # if the electron i to be updated is spin up 
-            v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
-            ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
-	          # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
-            self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
-            #print i,'dr',dr,'v',v,'ratio',ratio
-            self.slater_det_up *= ratio
-            #print 'SlaterInverse',self.inverse_SD_up
-        else: # if electron i is spin down
-            v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
-            ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
-            self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
-            self.slater_det_down *= ratio
+        
+        if testbool==False:
+            # update the inverse of determinant matrix
+            u = np.zeros(self.N_up+self.N_down)
+            u[i]=1.0    # u = [0...1...0] ith electron
+            if i < self.N_up:    # if the electron i to be updated is spin up 
+                v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
+                ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
+	              # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
+                self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
+                #print i,'dr',dr,'v',v,'ratio',ratio
+                self.slater_det_up *= ratio
+                #print 'SlaterInverse',self.inverse_SD_up, '          ratio',ratio,'cond',np.linalg.cond(self.inverse_SD_up)
+            else: # if electron i is spin down
+                v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
+                ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
+                self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
+                self.slater_det_down *= ratio
 	      
-        Ji_before = self.Jastrow_i(i)
+        ## TODO test code
+        if testbool:
+            slater_mat = SlaterMatrix(self.e_positions[:self.N_up],self.psi_up)
+            old_SD = SlaterDeterminant(slater_mat)
+
+        ## end test code
+
+        #TODO Ji_before = self.Jastrow_i(i)
         self.e_positions[i] = rnew
         self.e_disp[i,i+1:] = rnew - self.e_positions[i+1:]
         self.e_dist[i,i+1:] = np.sqrt(np.sum(self.e_disp[i,i+1:]*self.e_disp[i,i+1:],1))
@@ -256,12 +269,34 @@ class WaveFunctionClass:
         self.e_dist[:i,i] = np.sqrt(np.sum(self.e_disp[:i,i]*self.e_disp[:i,i],1)) # distances of earlier electrons
         self.atom_disp[i,:] = rnew - self.ion_positions
         self.atom_dist[i,:] = np.sqrt(np.sum(self.atom_disp[i,:]*self.atom_disp[i,:],1))
-	
-        Ji_after = self.Jastrow_i(i)
-        deltaJ = Ji_after - Ji_before
-        self.J += deltaJ
         
-        return ratio*ratio * np.exp(-2*deltaJ)
+        ## TODO test code
+        if testbool:
+            slater_mat = SlaterMatrix(self.e_positions[:self.N_up],self.psi_up)
+            new_SD = SlaterDeterminant(slater_mat)
+            ratio = new_SD / old_SD
+            self.slater_det_up = new_SD
+        #print 'ratio',ratio, 'SD',new_SD
+        ## end test code
+        
+        # DEBUG test - PASSED
+        #test_disps = np.zeros((len(self.e_positions),len(self.e_positions),3))
+        #test_distances = np.zeros((len(self.e_positions),len(self.e_positions)))
+        #for i in range(len(self.e_positions)):
+        #    test_disps[i,i+1:] = self.e_positions[i] - self.e_positions[i+1:]
+        #    test_disps[:i,i] = self.e_positions[:i] - self.e_positions[i]
+        #    test_distances[i] = np.sqrt(np.sum(test_disps[i]*test_disps[i],1))
+        #print 'distance check:',test_distances
+            
+        #TODO Ji_after = self.Jastrow_i(i)
+        #deltaJ = Ji_after - Ji_before
+        #self.J += deltaJ
+        oldJ = self.J.copy()
+        newJ = self.Jastrow()
+        deltaJ = newJ-oldJ
+        #print 'Jastrows match', deltaJ
+        self.J = newJ.copy()
+        return ratio * np.exp(-deltaJ)
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self):
@@ -278,6 +313,7 @@ class WaveFunctionClass:
         else:
             slater_det_down = 1
         """
+        self.J = self.Jastrow()
         return self.slater_det_up * self.slater_det_down * np.exp(-self.J)
 
     def QuickPsi(self, i, dr):
@@ -326,7 +362,7 @@ class WaveFunctionClass:
                 # all the distances are to other down electrons
                 Uee += np.sum(self.Aee_same*e_dist/(1+self.Bee_same*e_dist))
         """
-        return np.exp(-(Uee + Uen))
+        return -(Uee+Uen) #np.exp(-(Uee + Uen))
 
     def Jastrow_i(self,i):
         # compute Jastrow terms with electron i
@@ -382,13 +418,47 @@ class WaveFunctionClass:
         # Apparently LA.det will compute determinants of all matrices stacked along dimension 2 at once
         # I am not sure this is any faster... but less for loops :)
         
-        useAnalytic = False
+        useHopper = True
         KE = 0
         N = len(self.e_positions) # 
         
-        if useAnalytic: # THIS WILL NOT WORK AT ALL until laplacian matrix and lap Jastrow are also updated
+        if useHopper: # THIS WILL NOT WORK AT ALL until laplacian matrix and lap Jastrow are also updated
             KE = 0 # need an indented line
+            FDKineticEnergy = 0.0
+            e_plusx = self.h * np.array([1,0,0])
+            e_plusy = self.h * np.array([0,1,0])
+            e_plusz = self.h * np.array([0,0,1])
+            e_minusx = -1.0*self.h * np.array([1,0,0])
+            e_minusy = -1.0*self.h * np.array([0,1,0])
+            e_minusz = -1.0*self.h * np.array([0,0,1])
+            for i in range(0,N):
+                psi_sum = 0.0
+                ratio = self.UpdatePosition(i,e_plusx)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_plusy-e_plusx)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_plusz-e_plusy)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_minusx-e_plusz)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_minusy-e_minusx)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_minusz-e_minusy)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,-e_minusz)
+                #print 'ratio(FDhop)',ratio
+                #print 'psi_sum',psi_sum
+                FDKineticEnergy += KEprefactor * (-6.0 + psi_sum ) /(self.h*self.h)
+            localKineticEnergy = FDKineticEnergy
             """
+                ratio *= UpdatePosition(i,e_plusy-e_plusx)
+                psi_sum += ratio
             deriv_mat = SlaterMatrix(e_positions, self.ion_positions, self.psi_laplacian) # the slater matrix of the laplacians
             
             allSlaterMats = np.repeat([SlaterMatrix(e_positions, self.ion_positions, self.psi_array)],N,axis=0) # copy this matrix N times along dimension 0

@@ -126,7 +126,7 @@ class Atom:
 
   def __init__(self, pos=np.array([0,0,0]), Z=1.0):
     self.i_pos = pos
-    self.Z = Z
+    self.Z = float(Z)
 
   last_e_vec = np.zeros(3)
   last_2p_vec = np.zeros(3)
