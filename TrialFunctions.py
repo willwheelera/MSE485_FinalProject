@@ -239,6 +239,7 @@ class WaveFunctionClass:
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
 	          # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
             self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
+            #print i,'dr',dr,'v',v,'ratio',ratio
             self.slater_det_up *= ratio
             #print 'SlaterInverse',self.inverse_SD_up
         else: # if electron i is spin down
@@ -474,4 +475,6 @@ def SlaterDeterminant(slater_matrix):
     Nfact = np.math.factorial(len(slater_matrix))
     SD = (1/np.sqrt(Nfact)) * LA.det(slater_matrix)
     return SD
+
+
 

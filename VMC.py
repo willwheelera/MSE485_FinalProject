@@ -8,8 +8,7 @@ import sys
 #from scipy import optimize
 
 def MetropolisMove(sigma): #move the electron at the i'th position
-    #dr = np.random.randn(3)*sigma
-    dr = np.array([0,0.5,0])
+    dr = np.random.randn(3)*sigma
     return(dr, 1.0) # return new_position, T_ratio
 # TODO: is copying the whole array less efficient than the version in the HW?
 
