@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
-import TrialFunctions2 as GTF
+import TrialFunctions as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
@@ -126,6 +126,8 @@ if __name__ == '__main__':
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
     WF = GTF.H2Molecule(bond_distance)
+    #WF = GTF.LithiumAtom()
+    #WF = GTF.HeliumAtom()
     WF.Bee_same = jastrowB
     WF.Bee_anti = jastrowB
     WF.Den = jastrowD

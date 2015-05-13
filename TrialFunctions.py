@@ -89,11 +89,11 @@ def H2Molecule(ion_sep):
 def LithiumAtom():
     Li_atom = GSF.Atom(pos=np.array([0,0,0]),Z=3.0)
     psi_laplacian = []
-    psi_array_up = np.array([Li_atom.psi_1s, Li_atom.psi_2s])
+    psi_array_up = np.array([Li_atom.psi_1s])
     psi_array_down = np.array([Li_atom.psi_1s])
     ion_positions = np.array([Li_atom.i_pos])
     ion_charges = np.array([Li_atom.Z])
-    N_e = 3
+    N_e = 2
 
     wf = WaveFunctionClass()
     wf.setUpWavefunctions(psi_array_up)
@@ -458,7 +458,8 @@ class WaveFunctionClass:
             #  e_posxMinusH = e_positions.copy()
             #  e_posyMinusH = e_positions.copy()
             #  e_poszMinusH = e_positions.copy()
-            psi = self.QuickPsi
+            '''
+	    psi = self.QuickPsi
             FDKineticEnergy = 0.0
             for i in range(0,N):
                 #e_posxPlusH[i,0] += self.h
@@ -480,6 +481,39 @@ class WaveFunctionClass:
                 #print 'psisum',psi_sum 
                 FDKineticEnergy += KEprefactor * (-6.0 + psi_sum ) /(self.h*self.h)
             localKineticEnergy = FDKineticEnergy
+            '''
+            FDKineticEnergy = 0.0
+            e_plusx = self.h * np.array([1,0,0])
+            e_plusy = self.h * np.array([0,1,0])
+            e_plusz = self.h * np.array([0,0,1])
+            e_minusx = -1.0*self.h * np.array([1,0,0])
+            e_minusy = -1.0*self.h * np.array([0,1,0])
+            e_minusz = -1.0*self.h * np.array([0,0,1])
+            for i in range(0,N):
+                psi_sum = 0.0
+                ratio = self.UpdatePosition(i,e_plusx)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_plusy-e_plusx)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_plusz-e_plusy)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_minusx-e_plusz)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_minusy-e_minusx)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,e_minusz-e_minusy)
+                psi_sum += ratio
+                #print 'ratio(FDhop)',ratio
+                ratio *= self.UpdatePosition(i,-e_minusz)
+                #print 'ratio(FDhop)',ratio
+                #print 'psi_sum',psi_sum
+                FDKineticEnergy += KEprefactor * (-6.0 + psi_sum ) /(self.h*self.h)
+            localKineticEnergy = FDKineticEnergy                                    
 
         
         # POTENTIAL TERM
