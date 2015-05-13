@@ -212,7 +212,7 @@ def H2OMolecule(bond_length,bond_angle=np.pi*2/3):
     xdisp = np.cos((np.pi-bond_angle)*0.5)*bond_length * GSF.a_B
     ydisp = np.sin((np.pi-bond_angle)*0.5)*bond_length * GSF.a_B
     
-    O_atom = GSF.Atom(pos=np.array([0,0,0],Z=8.0))
+    O_atom = GSF.Atom(pos=np.array([0,0,0]),Z=8.0)
     H_atom1 = GSF.Atom(pos=np.array([-xdisp, ydisp, 0]), Z=1.0)
     H_atom2 = GSF.Atom(pos=np.array([xdisp, ydisp, 0]), Z=1.0)
     
@@ -233,9 +233,8 @@ def H2OMolecule(bond_length,bond_angle=np.pi*2/3):
     wf.setAtomList([H_atom1, H_atom2, O_atom])
     #wf.setIonPositions(ion_positions)
     #wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e)              
-    wf.setNumUp(len(psi_array_up))
-    wf.setNumDown(len(psi_array_down))
+    wf.setNumUp(len(psi_up))
+    wf.setNumDown(len(psi_down))
     #print 'Simulating H2OMolecule'
     return wf
 

@@ -125,7 +125,7 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma, jastrowB, jastrowD = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    WF = GTF.HFMolecule(bond_distance)
+    WF = GTF.H2OMolecule(bond_distance)
     #WF = GTF.LithiumAtom()
     #WF = GTF.HeliumAtom()
     WF.Bee_same = jastrowB
