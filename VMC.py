@@ -9,7 +9,10 @@ import sys
 
 def MetropolisMove(sigma): #move the electron at the i'th position
     dr = np.random.randn(3)*sigma
+<<<<<<< HEAD
     #dr = np.array([0,0.5,0])
+=======
+>>>>>>> ff2e47f582167e6937dea856a7fc7fbe8df21df4
     return(dr, 1.0) # return new_position, T_ratio
 # TODO: is copying the whole array less efficient than the version in the HW?
 
@@ -47,8 +50,8 @@ def MC_loop(WF, steps=1000, sig=0.5):
             
             e_move, T_ratio = MetropolisMove(sigma) #generate array of new electron poisitons
             # e_move is the CHANGE in position
-            prob_ratio = WF.UpdatePosition(i,e_move) # returns the probability ratio
-	    Psi_new =  WF.PsiManyBody()
+            prob_ratio = WF.UpdatePosition(i,e_move)**2 # returns the probability ratio
+            Psi_new =  WF.PsiManyBody()
             #prob_new = Psi_new**2 #get modulus^2 of new wave function
             #ratio = prob_new/prob_old #take the ratio of the squares
 
@@ -61,9 +64,11 @@ def MC_loop(WF, steps=1000, sig=0.5):
                 moves_accepted += 1.0
                 #prob_old = prob_new
                 Psi = Psi_new
+                #print 'accept',A
             else: # if we reject the move
                 WF.UpdatePosition(i,-1*e_move) # undo the move
-            collection_of_positions[index,:] = WF.e_positions[i]
+                #print 'REJECT',A
+            collection_of_positions[index] = WF.e_positions[i]
             index += 1
         
         E[t] = WF.LocalEnergy(Psi)
@@ -71,7 +76,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)+str(WF.e_positions)
        
     print 'Final prob ratio',prob_ratio
-    print('Acceptance Rate:',(moves_accepted/(N*t)))
+    print('Acceptance Rate:',(moves_accepted/(N*steps)))
     
     return collection_of_positions, E
 
@@ -129,9 +134,9 @@ if __name__ == '__main__':
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
-    Eavg = np.average(E)
+    Eavg = np.average(E) + Eion
     Evar = np.var(E)
-    print 'Avg Energy: '+str(Eavg+Eion)
+    print 'Avg Energy: '+str(Eavg)
     print 'Var Energy: '+str(Evar)
 #############################################################
 # PLOT POSITIONS
