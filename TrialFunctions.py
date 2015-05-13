@@ -274,7 +274,7 @@ class WaveFunctionClass:
         deltaJ = Ji_after - Ji_before
         self.J += deltaJ
         
-        return ratio*ratio #* np.exp(-2.0*deltaJ)  # where does 2.0 come from?
+        return ratio  * np.exp(-2.0*deltaJ)  # where does 2.0 come from?
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self):
@@ -291,7 +291,7 @@ class WaveFunctionClass:
         else:
             slater_det_down = 1
         """
-        return self.slater_det_up #* self.slater_det_down * np.exp(-self.J)
+        return self.slater_det_up * self.slater_det_down * np.exp(-self.J)
 
     def QuickPsi(self, i, dr):
         rnew = self.e_positions[i] + dr
@@ -299,8 +299,8 @@ class WaveFunctionClass:
         # where ONLY electron i is moved a SMALL amount dr
         # This meets finite difference halfway with partial analysis to save time
         # TODO write the function
-        u = np.zeros(self.N_up+self.N_down)                                                                                                 
-        u[i]=1.0    # u = [0...1...0] ith electron
+        #u = np.zeros(self.N_up+self.N_down)                                                                                                 
+        #u[i]=1.0    # u = [0...1...0] ith electron
         if i < self.N_up:    # if the electron i to be updated is spin up 
             u = np.zeros(self.N_up)
 	    u[i]=1.0
@@ -312,7 +312,7 @@ class WaveFunctionClass:
 	    v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
         #print i,'psiratio',ratio,'   v',v
-        return ratio #* np.exp(-self.JastrowDiff(i,dr))
+        return ratio * np.exp(-self.JastrowDiff(i,dr))
 
     def Jastrow(self):
         Uen = 0

@@ -241,7 +241,9 @@ class WaveFunctionClass:
             u = np.zeros(self.N_up+self.N_down)
             u[i]=1.0    # u = [0...1...0] ith electron
             if i < self.N_up:    # if the electron i to be updated is spin up 
-                v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
+                u = np.zeros(self.N_up)
+		u[i]=1.0
+		v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
                 ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
 	              # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
                 self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
@@ -249,7 +251,9 @@ class WaveFunctionClass:
                 self.slater_det_up *= ratio
                 #print 'SlaterInverse',self.inverse_SD_up, '          ratio',ratio,'cond',np.linalg.cond(self.inverse_SD_up)
             else: # if electron i is spin down
-                v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
+                u = np.zeros(self.N_down)
+		u[i-self.N_up]=1.0
+		v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
                 ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
                 self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
                 self.slater_det_down *= ratio
@@ -322,13 +326,17 @@ class WaveFunctionClass:
         # where ONLY electron i is moved a SMALL amount dr
         # This meets finite difference halfway with partial analysis to save time
         # TODO write the function
-        u = np.zeros(self.N_up+self.N_down)                                                                                                 
-        u[i]=1.0    # u = [0...1...0] ith electron
+        #u = np.zeros(self.N_up+self.N_down)                                                                                                 
+        #u[i]=1.0    # u = [0...1...0] ith electron
         if i < self.N_up:    # if the electron i to be updated is spin up 
-            v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_
+            u = np.zeros(self.N_up)
+	    u[i]=1.0
+	    v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
         else: # if electron i is spin down
-            v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
+            u = np.zeros(self.N_down)
+	    u[i-self.N_up]=1.0
+	    v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
         #print i,'psiratio',ratio,'   v',v
         return ratio * np.exp(-self.JastrowDiff(i,dr))

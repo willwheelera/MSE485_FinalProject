@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
-import TrialFunctions as GTF
+import TrialFunctions2 as GTF
 import GenerateStartingFunctions as GSF
 import timing
 import sys
@@ -9,10 +9,6 @@ import sys
 
 def MetropolisMove(sigma): #move the electron at the i'th position
     dr = np.random.randn(3)*sigma
-<<<<<<< HEAD
-    #dr = np.array([0,0.5,0])
-=======
->>>>>>> ff2e47f582167e6937dea856a7fc7fbe8df21df4
     return(dr, 1.0) # return new_position, T_ratio
 # TODO: is copying the whole array less efficient than the version in the HW?
 
@@ -127,17 +123,21 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    #WF = GTF.H2Molecule(bond_distance)
+    WF = GTF.H2Molecule(bond_distance)
     #WF = GTF.HydrogenAtom()
-    WF = GTF.HeliumAtom()
+    #WF = GTF.HeliumAtom()
 
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
     Eavg = np.average(E) + Eion
     Evar = np.var(E)
+    Estd = np.sqrt(Evar)
+    Este = Estd/np.sqrt(steps_input)*10.0
     print 'Avg Energy: '+str(Eavg)
     print 'Var Energy: '+str(Evar)
+    print 'STD Energy: '+str(Estd)
+    print 'STE Energy: '+str(Este)
 #############################################################
 # PLOT POSITIONS
 #############################################################
@@ -166,7 +166,7 @@ if __name__ == '__main__':
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts of Psi')
     
-    plt.title('Avg Energy: '+str(Eavg+Eion)+'   Var Energy: '+str(Evar)) 
+    plt.title('Avg Energy: '+str(Eavg)+'   Var Energy: '+str(Evar)) 
     #plt.scatter(x,y,c=u'r',s=10)
 
     # TODO plot average energy
