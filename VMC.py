@@ -70,7 +70,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
         if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
 
     print 'Final prob ratio',prob_ratio
-    print('Acceptance Rate:',(moves_accepted/(N*t)))
+    print('Acceptance Rate:',(moves_accepted/(N*steps)))
     
     return collection_of_positions, E
 
