@@ -171,7 +171,7 @@ if __name__ == '__main__':
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts of Psi')
     
-    plt.title('Avg Energy: '+str(Eavg)+'   Var Energy: '+str(Evar)) 
+    plt.title('Avg Energy: '+str(round(Eavg,5))+'   Var Energy: '+str(round(Evar,5))) 
     #plt.scatter(x,y,c=u'r',s=10)
 
     # TODO plot average energy
