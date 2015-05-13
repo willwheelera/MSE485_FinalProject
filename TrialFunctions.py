@@ -86,6 +86,34 @@ def H2Molecule(ion_sep):
     #print 'Simulating H2Molecule'
     return wf
 
+def H3Molecule(ion_sep):
+    # ion_sep is in atomic units of Bohr radius 
+    ion_positions = np.array([
+        [-0.5*ion_sep, 0, 0], 
+        [0.5*ion_sep, 0, 0], 
+        [0,0.5*ion_sep, 0]]) * GSF.a_B
+    H_atom1 = GSF.H_atom(pos=np.array(ion_positions[0]))#,Z=1.0)
+    H_atom2 = GSF.H_atom(pos=np.array(ion_positions[1]))#,Z=1.0)
+    H_atom3 = GSF.H_atom(pos=np.array(ion_positions[2]))#,Z=1.0)
+    psi_laplacian = []
+    # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
+    # using 1:1 and up for both for now  
+    psi_array_up = np.array([H_atom1.psi_1s,H_atom2.psi_1s])
+    psi_array_down = np.array([H_atom3.psi_1s])
+
+    wf = WaveFunctionClass()
+    wf.setUpWavefunctions(psi_array_up)
+    wf.setDownWavefunctions(psi_array_down)
+    wf.setAtomicLaplacians(psi_laplacian)
+    wf.setAtomList([H_atom1,H_atom2,H_atom3])
+    #wf.setIonPositions(ion_positions)
+    #wf.setIonCharges(ion_charges)
+    wf.setNumUp(len(psi_array_up))
+    wf.setNumDown(len(psi_array_down))
+    
+    #print 'Simulating H2Molecule'
+    return wf
+
 def LithiumAtom():
     Li_atom = GSF.Atom(pos=np.array([0,0,0]),Z=3.0)
     psi_laplacian = []
