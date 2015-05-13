@@ -28,7 +28,19 @@ Y00 = (4.0*math.pi)**(-0.5)
 
 def Y1all(rvec, Z=1.0):
   rmag = np.sqrt(np.sum(rvec*rvec,1))
-  return np.sqrt(0.75/np.pi) * rvec/rmag
+  return np.sqrt(0.75/np.pi) * rvec / np.array([rmag,rmag,rmag]).T
+
+def Y1x(rvec, Z=1.0):
+  rmag = np.sqrt(np.sum(rvec*rvec,1))
+  return np.sqrt(0.75/np.pi) * rvec[:,0] / rmag
+
+def Y1y(rvec, Z=1.0):
+  rmag = np.sqrt(np.sum(rvec*rvec,1))
+  return np.sqrt(0.75/np.pi) * rvec[:,1] / rmag
+
+def Y1z(rvec, Z=1.0):
+  rmag = np.sqrt(np.sum(rvec*rvec,1))
+  return np.sqrt(0.75/np.pi) * rvec[:,2] / rmag
 
 # Radial functions
 # Note: this function requires that position coordinates are along dimension 1 of the array (not 0)
@@ -80,13 +92,13 @@ def psi_2p_all(e_pos_vec, i_pos, Z=1.0):
   return Y1all(e_pos_vec - i_pos) * R21(e_pos_vec - i_pos, Z)
 
 def psi_2px(e_pos_vec, i_pos, Z=1.0):
-  return Y1all(e_pos_vec - i_pos)[0] * R21(e_pos_vec - i_pos, Z)
+  return Y1x(e_pos_vec - i_pos)[0] * R21(e_pos_vec - i_pos, Z)
 
 def psi_2py(e_pos_vec, i_pos, Z=1.0):
-  return Y1all(e_pos_vec - i_pos)[1] * R21(e_pos_vec - i_pos, Z)
+  return Y1y(e_pos_vec - i_pos)[1] * R21(e_pos_vec - i_pos, Z)
 
 def psi_2pz(e_pos_vec, i_pos, Z=1.0):
-  return Y1all(e_pos_vec - i_pos)[2] * R21(e_pos_vec - i_pos, Z)
+  return Y1z(e_pos_vec - i_pos)[2] * R21(e_pos_vec - i_pos, Z)
 
 # Laplacian of S orbitals
 def Lpsi_1s(e_pos_vec, i_pos):
@@ -123,13 +135,16 @@ class H_atom:
 class Atom:
   Z = 1.0
   i_pos = np.zeros(3)
-
+  
+  last_e_vec = np.zeros(3)
+  last_2p_vec = np.zeros(3)
+  
   def __init__(self, pos=np.array([0,0,0]), Z=1.0):
     self.i_pos = pos
     self.Z = float(Z)
 
-  last_e_vec = np.zeros(3)
-  last_2p_vec = np.zeros(3)
+  
+  
   
   def setPosition(self, pos):
     self.i_pos = pos
@@ -144,26 +159,17 @@ class Atom:
     return Y1all(e_pos_vec - self.i_pos) * R21(e_pos_vec - self.i_pos, self.Z)
   
   def psi_2px(self, e_pos_vec):
-    if (last_e_vec == e_pos_vec).all():
-      return last_2p_vec[0]
-    else:
-      last_e_vec = e_pos_vec.copy()
-      last_2p_vec = Y1all(e_pos_vec - self.i_pos)[0] * R21(e_pos_vec - self.i_pos, self.Z)
-      return last_2p_vec[0]
+    #if (self.last_e_vec == e_pos_vec).all():
+    #  return self.last_2p_vec[0]
+    #else:
+    #  self.last_e_vec = e_pos_vec.copy()
+    #  self.last_2p_vec = Y1all(e_pos_vec - self.i_pos) * R21(e_pos_vec - self.i_pos, self.Z)
+      return Y1x(e_pos_vec - self.i_pos) * R21(e_pos_vec - self.i_pos,self.Z)
   
   def psi_2py(self, e_pos_vec):
-    if (last_e_vec == e_pos_vec).all():
-      return last_2p_vec[1]
-    else:
-      last_e_vec = e_pos_vec.copy() 
-      last_2p_vec = Y1all(e_pos_vec - self.i_pos)[0] * R21(e_pos_vec - self.i_pos, self.Z)
-      return last_2p_vec[1]
+      return Y1y(e_pos_vec - self.i_pos) * R21(e_pos_vec - self.i_pos,self.Z)
+
 
   def psi_2pz(self, e_pos_vec):
-    if (last_e_vec == e_pos_vec).all():
-      return last_2p_vec[2]
-    else:
-      last_e_vec = e_pos_vec.copy() 
-      last_2p_vec = Y1all(e_pos_vec - self.i_pos)[0] * R21(e_pos_vec - self.i_pos, self.Z)
-      return last_2p_vec[2]
+      return Y1z(e_pos_vec - self.i_pos) * R21(e_pos_vec - self.i_pos,self.Z)
 

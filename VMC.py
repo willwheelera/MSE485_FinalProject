@@ -68,8 +68,8 @@ def MC_loop(WF, steps=1000, sig=0.5):
             index += 1
         
         E[t] = WF.LocalEnergy(Psi)
-        printtime = 1000
-        if (t+1)%printtime == 0: print 'Finished step '+str(t+1)+str(WF.e_positions)
+        printtime = 250
+        if (t+1)%printtime == 0: print 'Finished step '+str(t+1) #str(WF.e_positions)
        
     print 'Final prob ratio',prob_ratio
     print('Acceptance Rate:',(moves_accepted/(N*steps)))
@@ -125,7 +125,7 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma, jastrowB, jastrowD = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    WF = GTF.H2Molecule(bond_distance)
+    WF = GTF.HFMolecule(bond_distance)
     #WF = GTF.LithiumAtom()
     #WF = GTF.HeliumAtom()
     WF.Bee_same = jastrowB
