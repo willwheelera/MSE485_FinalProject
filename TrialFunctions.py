@@ -12,43 +12,52 @@ KEprefactor  = -GSF.hbar**2 * 0.5/GSF.m_e
 q_e2k = GSF.q_e**2 * GSF.k_e
 
 def HydrogenAtom():
-    H_atom = GSF.Atom(pos=np.array([0,0,0],Z=1.0))
+    H_atom = GSF.Atom(pos=np.array([0,0,0]),Z=2.0)
     psi_array = np.array([H_atom.psi_1s])
     psi_laplacian = []
     ion_positions = np.array([H_atom.i_pos])
     ion_charges = np.array([H_atom.Z]) 
     N_e = 1
+    psi_array_up = np.array([H_atom.psi_1s])
+    psi_array_down = np.array([])
     
     wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array)
-    wf.setDownWavefunctions(psi_array)
+    wf.setUpWavefunctions(psi_array_up)
+    wf.setDownWavefunctions(psi_array_down)
     wf.setAtomicLaplacians(psi_laplacian)
-    wf.setIonPositions(ion_positions)
-    wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e) 
+    #wf.setIonPositions(ion_positions)
+    #wf.setIonCharges(ion_charges)
+    wf.setAtomList([H_atom])
+    #wf.setNumElectrons(N_e) 
+    wf.setNumUp(len(psi_array_up))
+    wf.setNumDown(len(psi_array_down))
     # Up or down doesn't matter for 1 electron; note the default is 0 in the class
-    wf.N_up = 1
+    #wf.N_up = 1
     #print 'Simulating HydrogenAtom'
     return wf
 
 def HeliumAtom():
-    He_atom = GSF.Atom(pos=np.array([0,0,0],Z=2.0))
+    #setting 1 spin up and 1 spin down
+    He_atom = GSF.Atom(pos=np.array([0,0,0]),Z=2.0)
     psi_laplacian = [] 
     psi_array = np.array([He_atom.psi_1s])
+    psi_array_up = np.array([He_atom.psi_1s])
+    psi_array_down = np.array([He_atom.psi_1s])
     ion_positions = np.array([He_atom.i_pos])
     ion_charges = np.array([He_atom.Z])
     N_e = 2
     
     wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array)
-    wf.setDownWavefunctions(psi_array)
+    wf.setUpWavefunctions(psi_array_up)
+    wf.setDownWavefunctions(psi_array_down)
     wf.setAtomicLaplacians(psi_laplacian)
-    wf.setIonPositions(ion_positions)
-    wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e)              
-    # set 1 up and 1 down for electrons
-    wf.N_up = 1
-    wf.N_down = 1
+    #wf.setIonPositions(ion_positions)
+    #wf.setIonCharges(ion_charges)
+    #wf.setNumElectrons(N_e)              
+    wf.setAtomList([He_atom])
+    wf.setNumUp(len(psi_array_up))
+    wf.setNumDown(len(psi_array_down))
+
     return wf
 
 def H2Molecule(ion_sep):
@@ -56,8 +65,8 @@ def H2Molecule(ion_sep):
     ion_positions = np.array([
         [-0.5*ion_sep, 0, 0],
         [0.5*ion_sep, 0, 0]]) * GSF.a_B
-    H_atom1 = GSF.Atom(pos=np.array(ion_positions[0]),Z=1.0)
-    H_atom2 = GSF.Atom(pos=np.array(ion_positions[1]),Z=1.0)
+    H_atom1 = GSF.H_atom(pos=np.array(ion_positions[0]))#,Z=1.0)
+    H_atom2 = GSF.H_atom(pos=np.array(ion_positions[1]))#,Z=1.0)
     psi_laplacian = []
     # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
     # using 1:1 and up for both for now  
@@ -151,6 +160,7 @@ class WaveFunctionClass:
     inverse_SD_up = []                      
     slater_matrix_down = []
     slater_det_down = 1.0
+    inverse_SD_down = []
     h=0.001
 
     def setAtomList(self, atoms):
@@ -188,11 +198,11 @@ class WaveFunctionClass:
         self.Cen = -1*charges
    
     def psiDiff(self, fns, rvec):
-        out_list = np.zeros((2,len(fns)))
+        out_list = np.zeros((2,len(fns)))   # 2 --> always two vector , r_old and r_new
         for i in range(len(fns)):
-            out_list[i] = fns[i](rvec)
-        return out_list[:,1]-out_list[:,0]
-     
+            out_list[:,i] = fns[i](rvec)
+        return out_list[1]-out_list[0]
+    
     def InitializeElectrons(self):
         if self.N_up == 0 and self.N_down == 0:
             print 'Error: no electrons to initialize'
@@ -232,17 +242,21 @@ class WaveFunctionClass:
         # function to update position of one electron and the corresponding distances
        	rnew = self.e_positions[i] + dr
         # update the inverse of determinant matrix
-        u = np.zeros(self.N_up+self.N_down)
-        u[i]=1.0    # u = [0...1...0] ith electron
+        #u = np.zeros(self.N_up+self.N_down)
+        #u[i]=1.0    # u = [0...1...0] ith electron
         if i < self.N_up:    # if the electron i to be updated is spin up 
-            v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
+            u = np.zeros(self.N_up)
+	    u[i]=1.0
+	    v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_old) and psi(r_new)
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
 	          # A_inv_new = A_inv - (A_inv*u*v^T*A_inv)/ratio
-            self.inverse_SD_up += -1*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
+            self.inverse_SD_up += -1.0*np.outer(np.dot(self.inverse_SD_up,u),np.dot(v,self.inverse_SD_up.T))/ratio
             self.slater_det_up *= ratio
             #print 'SlaterInverse',self.inverse_SD_up
         else: # if electron i is spin down
-            v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
+            u = np.zeros(self.N_down)
+	    u[i-self.N_up]=1.0
+	    v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
             self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
             self.slater_det_down *= ratio
@@ -260,7 +274,7 @@ class WaveFunctionClass:
         deltaJ = Ji_after - Ji_before
         self.J += deltaJ
         
-        return ratio*ratio * np.exp(-2*deltaJ)
+        return ratio*ratio #* np.exp(-2.0*deltaJ)  # where does 2.0 come from?
 
     # MANY-BODY WAVEFUNCTION
     def PsiManyBody(self):
@@ -271,13 +285,13 @@ class WaveFunctionClass:
             slater_det_up = SlaterDeterminant(slater_matrix_up)
         else:
             slater_det_up = 1
-        if N_down > 0:
+        if N_down > 0:e
             slater_matrix_down = SlaterMatrix(self.e_positions[N_up:], self.psi_down)
             slater_det_down = SlaterDeterminant(slater_matrix_down)
         else:
             slater_det_down = 1
         """
-        return self.slater_det_up * self.slater_det_down * np.exp(-self.J)
+        return self.slater_det_up #* self.slater_det_down * np.exp(-self.J)
 
     def QuickPsi(self, i, dr):
         rnew = self.e_positions[i] + dr
@@ -288,13 +302,17 @@ class WaveFunctionClass:
         u = np.zeros(self.N_up+self.N_down)                                                                                                 
         u[i]=1.0    # u = [0...1...0] ith electron
         if i < self.N_up:    # if the electron i to be updated is spin up 
-            v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_
+            u = np.zeros(self.N_up)
+	    u[i]=1.0
+	    v = self.psiDiff(self.psi_up, np.array([self.e_positions[i], rnew]))  # v^T for rank one update method, it is simply the different of psi(r_
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_up,u))
         else: # if electron i is spin down
-            v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
+            u = np.zeros(self.N_down)
+	    u[i-self.N_up]=1.0
+	    v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
         #print i,'psiratio',ratio,'   v',v
-        return ratio * np.exp(-self.JastrowDiff(i,dr))
+        return ratio #* np.exp(-self.JastrowDiff(i,dr))
 
     def Jastrow(self):
         Uen = 0

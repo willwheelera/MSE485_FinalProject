@@ -8,8 +8,8 @@ import sys
 #from scipy import optimize
 
 def MetropolisMove(sigma): #move the electron at the i'th position
-    #dr = np.random.randn(3)*sigma
-    dr = np.array([0,0.5,0])
+    dr = np.random.randn(3)*sigma
+    #dr = np.array([0,0.5,0])
     return(dr, 1.0) # return new_position, T_ratio
 # TODO: is copying the whole array less efficient than the version in the HW?
 
@@ -34,7 +34,7 @@ def MC_loop(WF, steps=1000, sig=0.5):
     e_positions = WF.InitializeElectrons()
     e_positions_new = e_positions.copy()
     N = len(e_positions)
-    collection_of_positions = np.zeros((2*N*steps,3))
+    collection_of_positions = np.zeros((N*steps,3))
     
     Psi = WF.PsiManyBody()
     prob_old = Psi**2
@@ -48,13 +48,13 @@ def MC_loop(WF, steps=1000, sig=0.5):
             e_move, T_ratio = MetropolisMove(sigma) #generate array of new electron poisitons
             # e_move is the CHANGE in position
             prob_ratio = WF.UpdatePosition(i,e_move) # returns the probability ratio
-            Psi_new =  WF.PsiManyBody()
+	    Psi_new =  WF.PsiManyBody()
             #prob_new = Psi_new**2 #get modulus^2 of new wave function
             #ratio = prob_new/prob_old #take the ratio of the squares
 
             ## A = min(1,ratio) # Acceptance crtierion - this is automatically satisfied in our probability checking
             A = prob_ratio
-
+            #A = ratio
             ran = np.random.random()
             if A > ran:
                 #e_positions = e_positions_new
@@ -63,13 +63,13 @@ def MC_loop(WF, steps=1000, sig=0.5):
                 Psi = Psi_new
             else: # if we reject the move
                 WF.UpdatePosition(i,-1*e_move) # undo the move
-            collection_of_positions[index:index+N,:] = WF.e_positions
-            index += N
+            collection_of_positions[index,:] = WF.e_positions[i]
+            index += 1
         
         E[t] = WF.LocalEnergy(Psi)
         printtime = 1000
-        if (t+1)%printtime == 0: print 'Finished step '+str(t+1)
-
+        if (t+1)%printtime == 0: print 'Finished step '+str(t+1)+str(WF.e_positions)
+       
     print 'Final prob ratio',prob_ratio
     print('Acceptance Rate:',(moves_accepted/(N*t)))
     
@@ -115,15 +115,17 @@ def parseArgs(args,x):
 if __name__ == '__main__':
     sigma_default = 0.8    # TODO do we need to optimize these to have good acceptance rate?
     
-    steps_input = 1000
+    steps_input = 1000   
     separation = 1.0
 
     x = {'numSteps': steps_input, 'separation': separation, 'sigma': sigma_default}
     steps_input, bond_distance, sigma = parseArgs(sys.argv,x)
     
     #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    WF = GTF.H2Molecule(bond_distance)
-    
+    #WF = GTF.H2Molecule(bond_distance)
+    #WF = GTF.HydrogenAtom()
+    WF = GTF.HeliumAtom()
+
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
     Eion = GTF.IonPotentialEnergy(WF.ion_positions,WF.ion_charges) 
@@ -158,7 +160,8 @@ if __name__ == '__main__':
     plt.ylabel('y')
     cbar = plt.colorbar()
     cbar.ax.set_ylabel('Counts of Psi')
-
+    
+    plt.title('Avg Energy: '+str(Eavg+Eion)+'   Var Energy: '+str(Evar)) 
     #plt.scatter(x,y,c=u'r',s=10)
 
     # TODO plot average energy
@@ -173,7 +176,6 @@ if __name__ == '__main__':
     # plot x
     #plt.plot(x[0::4]*4,color='y')
     #plt.axhline(y=np.mean(x[0::4])*4,xmin=0,xmax=len(E),color='g')
-    
     plt.show()
     
 
