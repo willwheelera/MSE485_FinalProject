@@ -126,7 +126,7 @@ if __name__ == '__main__':
     steps_input, bond_distance, sigma, jastrowB, jastrowD = parseArgs(sys.argv,x)
    
     WF = GTF.WaveFunctionClass() 
-    WF = DS.H2Molecule(WF,bond_distance)
+    WF = DS.H2Symmetric(WF,bond_distance)
     #WF = DS.H2OMolecule(WF,bond_distance)
     #WF = DS.LithiumAtom(WF)
     #WF = DS.HeliumAtom(WF)
