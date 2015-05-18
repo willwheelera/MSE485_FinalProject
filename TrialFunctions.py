@@ -11,161 +11,6 @@ from numpy import random
 KEprefactor  = -GSF.hbar**2 * 0.5/GSF.m_e
 q_e2k = GSF.q_e**2 * GSF.k_e
 
-def HydrogenAtom():
-    H_atom = GSF.Atom(pos=np.array([0,0,0]),Z=2.0)
-    psi_array = np.array([H_atom.psi_1s])
-    psi_laplacian = []
-    ion_positions = np.array([H_atom.i_pos])
-    ion_charges = np.array([H_atom.Z]) 
-    N_e = 1
-    psi_array_up = np.array([H_atom.psi_1s])
-    psi_array_down = np.array([])
-    
-    wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array_up)
-    wf.setDownWavefunctions(psi_array_down)
-    wf.setAtomicLaplacians(psi_laplacian)
-    #wf.setIonPositions(ion_positions)
-    #wf.setIonCharges(ion_charges)
-    wf.setAtomList([H_atom])
-    #wf.setNumElectrons(N_e) 
-    wf.setNumUp(len(psi_array_up))
-    wf.setNumDown(len(psi_array_down))
-    # Up or down doesn't matter for 1 electron; note the default is 0 in the class
-    #wf.N_up = 1
-    #print 'Simulating HydrogenAtom'
-    return wf
-
-def HeliumAtom():
-    #setting 1 spin up and 1 spin down
-    He_atom = GSF.Atom(pos=np.array([0,0,0]),Z=2.0)
-    psi_laplacian = [] 
-    psi_array = np.array([He_atom.psi_1s])
-    psi_array_up = np.array([He_atom.psi_1s])
-    psi_array_down = np.array([He_atom.psi_1s])
-    ion_positions = np.array([He_atom.i_pos])
-    ion_charges = np.array([He_atom.Z])
-    N_e = 2
-    
-    wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array_up)
-    wf.setDownWavefunctions(psi_array_down)
-    wf.setAtomicLaplacians(psi_laplacian)
-    #wf.setIonPositions(ion_positions)
-    #wf.setIonCharges(ion_charges)
-    #wf.setNumElectrons(N_e)              
-    wf.setAtomList([He_atom])
-    wf.setNumUp(len(psi_array_up))
-    wf.setNumDown(len(psi_array_down))
-
-    return wf
-
-def H2Molecule(ion_sep):
-    # ion_sep is in atomic units of Bohr radius 
-    ion_positions = np.array([
-        [-0.5*ion_sep, 0, 0],
-        [0.5*ion_sep, 0, 0]]) * GSF.a_B
-    H_atom1 = GSF.H_atom(pos=np.array(ion_positions[0]))#,Z=1.0)
-    H_atom2 = GSF.H_atom(pos=np.array(ion_positions[1]))#,Z=1.0)
-    psi_laplacian = []
-    # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
-    # using 1:1 and up for both for now  
-    psi_array_up = np.array([H_atom1.psi_1s])
-    psi_array_down = np.array([H_atom2.psi_1s])
-
-    wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array_up)
-    wf.setDownWavefunctions(psi_array_down)
-    wf.setAtomicLaplacians(psi_laplacian)
-    wf.setAtomList([H_atom1,H_atom2])
-    #wf.setIonPositions(ion_positions)
-    #wf.setIonCharges(ion_charges)
-    wf.setNumUp(len(psi_array_up))
-    wf.setNumDown(len(psi_array_down))
-    
-    #print 'Simulating H2Molecule'
-    return wf
-
-def H3Molecule(ion_sep):
-    # ion_sep is in atomic units of Bohr radius 
-    ion_positions = np.array([
-        [-0.5*ion_sep, 0, 0], 
-        [0.5*ion_sep, 0, 0], 
-        [0,0.5*ion_sep, 0]]) * GSF.a_B
-    H_atom1 = GSF.H_atom(pos=np.array(ion_positions[0]))#,Z=1.0)
-    H_atom2 = GSF.H_atom(pos=np.array(ion_positions[1]))#,Z=1.0)
-    H_atom3 = GSF.H_atom(pos=np.array(ion_positions[2]))#,Z=1.0)
-    psi_laplacian = []
-    # two options for 2 electrons --> 2(up and down):0 or 1:1  (up: down or up:up)
-    # using 1:1 and up for both for now  
-    psi_array_up = np.array([H_atom1.psi_1s,H_atom2.psi_1s])
-    psi_array_down = np.array([H_atom3.psi_1s])
-
-    wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array_up)
-    wf.setDownWavefunctions(psi_array_down)
-    wf.setAtomicLaplacians(psi_laplacian)
-    wf.setAtomList([H_atom1,H_atom2,H_atom3])
-    #wf.setIonPositions(ion_positions)
-    #wf.setIonCharges(ion_charges)
-    wf.setNumUp(len(psi_array_up))
-    wf.setNumDown(len(psi_array_down))
-    
-    #print 'Simulating H2Molecule'
-    return wf
-
-def LithiumAtom():
-    Li_atom = GSF.Atom(pos=np.array([0,0,0]),Z=3.0)
-    psi_laplacian = []
-    psi_array_up = np.array([Li_atom.psi_1s])
-    psi_array_down = np.array([Li_atom.psi_1s])
-    ion_positions = np.array([Li_atom.i_pos])
-    ion_charges = np.array([Li_atom.Z])
-    N_e = 2
-
-    wf = WaveFunctionClass()
-    wf.setUpWavefunctions(psi_array_up)
-    wf.setDownWavefunctions(psi_array_down)
-    wf.setAtomicLaplacians(psi_laplacian)
-    wf.setAtomList([Li_atom])
-    #wf.setIonPositions(ion_positions)
-    #wf.setIonCharges(ion_charges)
-    #wf.setNumElectrons(N_e)
-    # set 1 up and 1 down for electrons
-    wf.setNumUp(len(psi_array_up))
-    wf.setNumDown(len(psi_array_down))
-    return wf                                                    
-
-
-def H2OMolecule(bond_length,bond_angle):
-    # bond_length is in atomic units of Bohr radius
-    xdisp = np.cos(bond_angle)*bond_length * GSF.a_B
-    ydisp = np.sin(bond_angle)*bond_length * GSF.a_B
-    
-    O_atom = GSF.Atom(pos=np.array([0,0,0],Z=8.0))
-    H_atom1 = GSF.Atom(pos=np.array([-xdisp, ydisp, 0]), Z=1.0)
-    H_atom2 = GSF.Atom(pos=np.array([xdisp, ydisp, 0]), Z=1.0)
-    
-    # for each electron, need to have wavefn, atom position and atomic number
-    # TODO not in scalable form
-    psi_array = np.array([H_atom1.psi_1s, H_atom2.psi_1s, O_atom.psi_1s, O_atom.psi_2s, O_atom.psi_2px, O_atom.psi_2py, O_atom.psi_2pz])
-    #psi_laplacian = np.array([GSF.Lpsi_1s, GSF.Lpsi_1s])
-    psi_laplacian = []
-    
-    ion_positions = np.array([H_atom1.i_pos, H_atom2.i_pos, O_atom.i_pos])
-    ion_charges = np.array([H_atom1.Z, H_atom2.Z, O_atom.Z])
-    N_e = 10
-
-    wf = WaveFunctionClass()
-    wf.setAtomicWavefunctions(psi_array)
-    wf.setAtomicLaplacians(psi_laplacian)
-    wf.setAtomList([H_atom1, H_atom2, O_atom])
-    #wf.setIonPositions(ion_positions)
-    #wf.setIonCharges(ion_charges)
-    wf.setNumElectrons(N_e)              
-
-    #print 'Simulating H2OMolecule'
-    return wf
 
 def IonPotentialEnergy(ion_positions,ion_charges):
     V_ion=0.0
@@ -182,8 +27,6 @@ class WaveFunctionClass:
     # An atomic orbital is assigned to each electron.
 
     # Define the atomic wavefunctions
-    #psi_array = [] # GSF.getH2Functions()  #generate array of objective basis states
-    #psi_laplacian = [] # GSF.getH2Laplacians() # get kinetic energy terms of wavefunctions (including hbar^2/2m)
     ion_positions = [] # GSF.ion_positions
     ion_charges = [] # GSF.ion_charges  
     N_ion = len(ion_positions)
@@ -309,7 +152,7 @@ class WaveFunctionClass:
 	    u[i-self.N_up]=1.0
 	    v = self.psiDiff(self.psi_down, np.array([self.e_positions[i], rnew]))
             ratio = 1.0 + np.dot(v,np.dot(self.inverse_SD_down,u))
-            self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down.T))/ratio
+            self.inverse_SD_down += -1*np.outer(np.dot(self.inverse_SD_down,u),np.dot(v,self.inverse_SD_down))/ratio
             self.slater_det_down *= ratio
 	      
         Ji_before = self.Jastrow_i(i)
@@ -413,7 +256,9 @@ class WaveFunctionClass:
             Uee += np.sum(self.Aee_same*self.e_dist[i,i+1:]/(1+self.Bee_same*self.e_dist[i,i+1:]))
 
         return Uen + Uee
-
+    
+    # This function for approximate WF updating isn't being used
+    """
     def JastrowDiff(self,i,dr):
         # approximates the difference in Jastrow factor for incrementing electron i by vector dr
         da = np.sum(self.atom_disp[i]*dr,1)/self.atom_dist[i]
@@ -439,7 +284,7 @@ class WaveFunctionClass:
             Uee += np.sum(self.Aee_same*self.e_dist[i,i+1:]/(1+self.Bee_same*self.e_dist[i,i+1:]))
         Jdiff = Uee + Uen - self.Jastrow_i(i)
         return Jdiff
-
+    """
 
     ##########################################
     # LOCAL ENERGY

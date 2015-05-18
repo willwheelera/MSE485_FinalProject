@@ -1,8 +1,9 @@
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
-import TrialFunctions2 as GTF
+import TrialFunctions as GTF
 import GenerateStartingFunctions as GSF
+import DefineSystem as DS
 import timing
 import sys
 #from scipy import optimize
@@ -123,16 +124,17 @@ if __name__ == '__main__':
 
     x = {'numSteps': steps_input, 'separation': separation, 'sigma': sigma_default,'B': jastrowB, 'D': jastrowD}
     steps_input, bond_distance, sigma, jastrowB, jastrowD = parseArgs(sys.argv,x)
-    
-    #WF = GTF.H2Molecule(bond_distance, N_e=1)
-    WF = GTF.H2OMolecule(bond_distance)
-    #WF = GTF.LithiumAtom()
-    #WF = GTF.HeliumAtom()
+   
+    WF = GTF.WaveFunctionClass() 
+    WF = DS.H2Molecule(WF,bond_distance)
+    #WF = DS.H2OMolecule(WF,bond_distance)
+    #WF = DS.LithiumAtom(WF)
+    #WF = DS.HeliumAtom(WF)
     WF.Bee_same = jastrowB
     WF.Bee_anti = jastrowB
     WF.Den = jastrowD
-    #WF = GTF.HydrogenAtom()
-    #WF = GTF.HeliumAtom()
+    #WF = DS.HydrogenAtom(WF)
+    #WF = DS.HeliumAtom(WF)
 
     #for i in range(1,20):       # loop over different sigma to find minimum
     collection_of_positions, E = MC_loop(WF, steps_input, sigma)
